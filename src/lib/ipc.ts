@@ -24,7 +24,6 @@ export const ipc = {
   refreshRepository: () => invoke<RepoSnapshot>("refresh_repository"),
   recentRepositories: () => invoke<RecentRepository[]>("recent_repositories"),
   launchPath: () => invoke<string | null>("launch_path"),
-  createDemoRepository: () => invoke<string>("create_demo_repository"),
   commitDetails: (oid: string) => invoke<CommitDetails>("commit_details", { oid }),
   workingStatus: () => invoke<WorkingStatus>("working_status"),
   engineMetrics: () => invoke<EngineMetrics>("engine_metrics"),

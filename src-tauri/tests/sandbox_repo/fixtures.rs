@@ -1,4 +1,4 @@
-use crate::error::{Error, Result};
+use graft_lib::error::{Error, Result};
 
 /// Named source fragments. A file version is a recipe listing fragments in order, so a
 /// moved function is literally the same fragment placed somewhere else.
@@ -21,7 +21,7 @@ impl Parts {
                 let (header, body) = section.split_once('\n')?;
                 (header.trim() == name).then(|| body.trim_matches('\n'))
             })
-            .ok_or_else(|| Error::invalid(format!("demo fixture part `{name}` is missing")))
+            .ok_or_else(|| Error::invalid(format!("fixture part `{name}` is missing")))
     }
 
     /// Joins the named parts with `blank_lines` empty lines between them.

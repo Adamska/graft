@@ -3,11 +3,11 @@
 
 use std::path::{Path, PathBuf};
 
-use graft_lib::demo::sandbox;
+use super::sandbox_repo::sandbox;
 use graft_lib::git::cli;
 use graft_lib::state::Session;
 
-/// A fresh copy of the demo repository, removed again when dropped.
+/// A fresh copy of the sandbox repository, removed again when dropped.
 pub struct Scratch {
     pub root: PathBuf,
     pub session: Session,
@@ -16,8 +16,8 @@ pub struct Scratch {
 impl Scratch {
     pub fn new(name: &str) -> Self {
         let root = std::env::temp_dir().join(format!("graft-{name}-{}", std::process::id()));
-        sandbox::generate(&root).expect("generate demo repository");
-        let session = Session::open(&root).expect("open demo repository");
+        sandbox::generate(&root).expect("generate sandbox repository");
+        let session = Session::open(&root).expect("open sandbox repository");
         Self { root: session.root.clone(), session }
     }
 

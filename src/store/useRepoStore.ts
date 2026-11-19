@@ -34,7 +34,6 @@ interface RepoState {
   loadRecents: () => Promise<void>;
   pickRepository: () => Promise<void>;
   openRepository: (path: string) => Promise<void>;
-  openDemo: () => Promise<void>;
   closeRepository: () => void;
   reload: () => Promise<void>;
   refreshStatus: () => Promise<void>;
@@ -124,16 +123,6 @@ export const useRepoStore = create<RepoState>((set, get) => {
         const { staged, unstaged } = get().status;
         if (staged.length + unstaged.length === 0 && graphStore.model.total > 0) get().selectCommit(0);
         void get().loadRecents();
-      } catch (error) {
-        set({ phase: get().repo ? "ready" : "welcome" });
-        report(error);
-      }
-    },
-
-    openDemo: async () => {
-      set({ phase: "opening" });
-      try {
-        await get().openRepository(await ipc.createDemoRepository());
       } catch (error) {
         set({ phase: get().repo ? "ready" : "welcome" });
         report(error);

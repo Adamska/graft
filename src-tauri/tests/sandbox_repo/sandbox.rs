@@ -3,14 +3,14 @@ use std::fmt::Write as _;
 use std::path::Path;
 
 use super::history::{AUTHORS, PENDING, PUBLISHED, SCRIPT, TAGS};
-use crate::error::Result;
-use crate::git::cli;
+use graft_lib::error::Result;
+use graft_lib::git::cli;
 
 /// 2026-09-01T00:00:00Z; fixed so every generated repository has identical object ids.
 const EPOCH: u64 = 1_788_220_800;
 const COMMIT_SPACING_SECONDS: u64 = 19 * 3600;
 
-/// Recreates the demo repository at `root`: a multi-branch history imported in a single
+/// Recreates the sandbox repository at `root`: a multi-branch history imported in a single
 /// `git fast-import` pass, a local remote, and staged, unstaged, and untracked changes.
 pub fn generate(root: &Path) -> Result<()> {
     if root.join(".git").exists() {
@@ -22,7 +22,9 @@ pub fn generate(root: &Path) -> Result<()> {
     cli::run(root, &["symbolic-ref", "HEAD", "refs/heads/main"])?;
     cli::run_with_input(root, &["fast-import", "--quiet", "--done"], import_stream()?.as_bytes())?;
     cli::run(root, &["reset", "--quiet", "--hard", "main"])?;
-    for (key, value) in [("user.name", "Relay Demo"), ("user.email", "demo@relay.dev"), ("commit.gpgsign", "false")] {
+    for (key, value) in
+        [("user.name", "Relay Sandbox"), ("user.email", "sandbox@relay.dev"), ("commit.gpgsign", "false")]
+    {
         cli::run(root, &["config", key, value])?;
     }
 

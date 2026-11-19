@@ -1,7 +1,7 @@
 use super::fixtures::{join, AUTH, DOCS, RELAY, REPORT, WEB, WIRE};
-use crate::error::Result;
+use graft_lib::error::Result;
 
-/// Every distinct file revision that appears in the demo history or working tree.
+/// Every distinct file revision that appears in the sandbox history or working tree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Version {
     Readme,

@@ -1,6 +1,7 @@
 mod common;
 #[path = "common/repo.rs"]
 mod repo;
+mod sandbox_repo;
 
 use graft_lib::ast_diff::analyze;
 use graft_lib::ast_diff::model::{Row, RowKind};
@@ -55,7 +56,7 @@ fn stages_one_hunk_and_leaves_the_others_unstaged() {
     let scratch = Scratch::new("lines-hunk");
     let before = runs(&rows(&scratch, &DiffTarget::Unstaged, AUTH));
     let total = numstat(&scratch, false);
-    assert!(before.len() >= 3, "the demo edits several places in {AUTH}");
+    assert!(before.len() >= 3, "the sandbox edits several places in {AUTH}");
 
     let hunk = &before[1];
     staging::stage_lines(&scratch.session, AUTH, hunk).expect("stage second hunk");

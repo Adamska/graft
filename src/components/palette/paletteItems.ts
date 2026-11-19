@@ -98,7 +98,6 @@ export function buildItems(): PaletteItem[] {
   const diff = useDiffStore.getState();
   const items: PaletteItem[] = [
     action("open", "Open Repository", repo.pickRepository, "⌘O"),
-    action("demo", "Open Built-In Refactor Demo Repo", repo.openDemo),
     action("assistant", "Configure AI Provider", () => useUiStore.getState().setSettingsOpen(true)),
   ];
   if (!repo.repo) return items;

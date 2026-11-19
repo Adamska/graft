@@ -1,20 +1,21 @@
+mod sandbox_repo;
 use std::path::PathBuf;
 
 use graft_lib::ast_diff::render::render;
 use graft_lib::ast_diff::stage::EntitySelector;
 use graft_lib::ast_diff::ChangeKind;
 use graft_lib::changeset::DiffTarget;
-use graft_lib::demo::sandbox;
 use graft_lib::git::index;
 use graft_lib::staging;
 use graft_lib::state::Session;
+use sandbox_repo::sandbox;
 
 const AUTH: &str = "src/auth.rs";
 
 fn session(name: &str) -> (PathBuf, Session) {
     let root = std::env::temp_dir().join(format!("graft-staging-{name}-{}", std::process::id()));
-    sandbox::generate(&root).expect("generate demo repository");
-    let session = Session::open(&root).expect("open demo repository");
+    sandbox::generate(&root).expect("generate sandbox repository");
+    let session = Session::open(&root).expect("open sandbox repository");
     (root, session)
 }
 
@@ -108,7 +109,7 @@ fn commits_the_staged_declaration_only() {
     let (root, session) = session("commit");
     let pending = changes(&session, &DiffTarget::Unstaged);
     staging::stage_entity(&session, AUTH, pick(&pending, "is_expired")).expect("stage body edit");
-    index::unstage_paths(&session.root, &["web/api.ts".to_string()]).expect("unstage demo file");
+    index::unstage_paths(&session.root, &["web/api.ts".to_string()]).expect("unstage sandbox file");
 
     let oid = index::commit(&session.root, "fix(auth): expire tokens at the deadline", false).expect("commit");
 

@@ -6,9 +6,9 @@ A native Git client that diffs syntax trees instead of lines.
 
 Line diffs punish refactoring: move a function and you get forty red lines and forty green ones, with the one real edit buried somewhere inside. Graft parses both sides of every changed file with tree-sitter, pairs declarations across the whole changeset, and shows what actually happened: this function moved, that one moved and changed 11% of its tokens, this signature gained a parameter.
 
-![Structural diff of the built-in demo repository](docs/structural-diff.png)
+![Structural diff of a working tree](docs/structural-diff.png)
 
-The screenshot shows the working tree of the built-in demo repository. `is_expired` has a one-token body edit, `validate` moved below two other methods and lost an error path, and `remaining_ttl` is new. Each can be staged on its own.
+The screenshot shows the working tree of the scripted repository the test suite generates. `is_expired` has a one-token body edit, `validate` moved below two other methods and lost an error path, and `remaining_ttl` is new. Each can be staged on its own.
 
 ## What it does
 
@@ -33,7 +33,7 @@ A commit from the ripgrep history: a 58-line method whose only change is one rem
 
 ![Picking individual lines in the raw view](docs/line-staging.png)
 
-The raw view of the same demo file, with four added lines picked for staging out of a larger hunk.
+The raw view of the same file, with four added lines picked for staging out of a larger hunk.
 
 ## Getting started
 
@@ -51,9 +51,7 @@ npm install
 npm run tauri dev
 ```
 
-On the start screen, choose **Open Built-In Refactor Demo Repo**. Graft generates a small multi-language repository with 20 commits on five branches, plus staged, unstaged, and untracked work, and opens it. Every structural change kind appears somewhere in its history.
-
-To open your own repository, use `Cmd+O`, drop a folder on the window, or pass a path on the command line:
+Open a repository with `Cmd+O`, by dropping its folder on the window, or by passing its path on the command line:
 
 ```bash
 npx tauri dev -- -- /path/to/repository
@@ -165,7 +163,6 @@ src-tauri/src/
                heuristics.rs offline risk rules
                drafting.rs   offline commit message
                client.rs     Anthropic and OpenAI-compatible HTTP
-  demo/        sandbox.rs    demo repository generator
   commands.rs  commands/     Tauri IPC surface
 src/
   components/graph/      canvas renderer, edge routing, filter bar
@@ -229,7 +226,7 @@ Reads go through gix in-process. Everything that changes the repository or talks
 
 After each command the refs are read again, and the graph is only streamed again if a ref or `HEAD` actually moved. A new graph replaces the old one when its first chunk arrives, so the canvas never goes blank. Force pushes always use `--force-with-lease`.
 
-The demo repository ships with its own remote, a bare repository inside its `.git` directory, so fetch, pull, and push can be tried offline.
+The tests run every one of these commands against a scripted repository (`src-tauri/tests/sandbox_repo/`) that has its own remote, a bare repository inside its `.git` directory, so fetch, pull, and push are exercised offline.
 
 ## Benchmarks
 

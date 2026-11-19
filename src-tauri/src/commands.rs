@@ -11,7 +11,6 @@ use serde::Serialize;
 use tauri::ipc::{Channel, InvokeResponseBody, Response};
 use tauri::{AppHandle, Manager, State};
 
-use crate::demo::sandbox;
 use crate::error::{GitResultExt, Result};
 use crate::git::graph::{self, GraphStats};
 use crate::git::repo::{self, CommitDetails, RepoSnapshot};
@@ -99,14 +98,6 @@ pub fn working_status(state: State<'_, AppState>) -> Result<WorkingStatus> {
     let session = state.session()?;
     let scan = status::scan(&session.repository())?;
     Ok(WorkingStatus::from(&scan))
-}
-
-/// Regenerates the built-in sandbox repository and returns its path.
-#[tauri::command(async)]
-pub fn create_demo_repository(app: AppHandle) -> Result<String> {
-    let root = app.path().app_data_dir().git()?.join("demo").join("relay");
-    sandbox::generate(&root)?;
-    Ok(root.display().to_string())
 }
 
 #[tauri::command]

@@ -1,16 +1,17 @@
+mod sandbox_repo;
 use std::path::PathBuf;
 use std::sync::RwLock;
 
 use graft_lib::ast_diff::{analyze, ChangeKind};
 use graft_lib::changeset::{self, DiffTarget};
-use graft_lib::demo::sandbox;
 use graft_lib::git::repo::RefKind;
 use graft_lib::git::search::GraphIndex;
 use graft_lib::git::{graph, repo, status, ChangeStatus};
+use sandbox_repo::sandbox;
 
 fn generate(name: &str) -> PathBuf {
     let root = std::env::temp_dir().join(format!("graft-sandbox-{name}-{}", std::process::id()));
-    sandbox::generate(&root).expect("generate demo repository");
+    sandbox::generate(&root).expect("generate sandbox repository");
     root
 }
 
@@ -29,7 +30,7 @@ fn changes(repository: &gix::Repository, target: &DiffTarget) -> Vec<(ChangeKind
 #[test]
 fn generates_a_deterministic_multi_branch_history() {
     let (first, second) = (generate("a"), generate("b"));
-    let repository = repo::open(&first).expect("open demo");
+    let repository = repo::open(&first).expect("open sandbox");
     let snapshot = repo::snapshot(&repository).expect("snapshot");
 
     let locals = snapshot.refs.iter().filter(|reference| reference.kind == RefKind::Local).count();
@@ -38,7 +39,7 @@ fn generates_a_deterministic_multi_branch_history() {
     assert_eq!(tags, ["v0.1.0", "v0.2.0"]);
     assert_eq!(snapshot.head.branch.as_deref(), Some("main"));
 
-    let other = repo::snapshot(&repo::open(&second).expect("open demo")).expect("snapshot");
+    let other = repo::snapshot(&repo::open(&second).expect("open sandbox")).expect("snapshot");
     assert_eq!(snapshot.head.oid, other.head.oid, "fixed timestamps must yield identical object ids");
 
     let index = RwLock::new(GraphIndex::default());
@@ -60,7 +61,7 @@ fn generates_a_deterministic_multi_branch_history() {
 #[test]
 fn leaves_staged_unstaged_and_untracked_work_behind() {
     let root = generate("status");
-    let repository = repo::open(&root).expect("open demo");
+    let repository = repo::open(&root).expect("open sandbox");
     let scan = status::scan(&repository).expect("status");
 
     let staged: Vec<_> = scan.staged.iter().map(|blob| blob.change.path.as_str()).collect();
@@ -89,7 +90,7 @@ fn leaves_staged_unstaged_and_untracked_work_behind() {
 #[test]
 fn parser_split_commit_is_read_as_moves_across_files() {
     let root = generate("split");
-    let repository = repo::open(&root).expect("open demo");
+    let repository = repo::open(&root).expect("open sandbox");
     let snapshot = repo::snapshot(&repository).expect("snapshot");
     let branch = snapshot.refs.iter().find(|r| r.name == "feature/parser-split").expect("parser branch");
     let tip = repository.find_commit(branch.target).expect("tip");

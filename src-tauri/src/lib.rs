@@ -2,7 +2,6 @@ pub mod ai;
 pub mod ast_diff;
 pub mod changeset;
 pub mod commands;
-pub mod demo;
 pub mod error;
 pub mod git;
 pub mod recent;
@@ -63,7 +62,6 @@ pub fn run() {
             commands::assist::review_risks,
             commands::assist::assistant_status,
             commands::assist::save_assistant_settings,
-            commands::create_demo_repository,
             commands::engine_metrics,
         ])
         .run(tauri::generate_context!())

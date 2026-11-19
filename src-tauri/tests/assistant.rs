@@ -1,20 +1,21 @@
+mod sandbox_repo;
 use std::path::PathBuf;
 
 use graft_lib::ai::settings::{resolve, Provider, StoredSettings};
 use graft_lib::ai::{drafting, heuristics, reviewer, summary, Severity};
 use graft_lib::changeset::DiffTarget;
-use graft_lib::demo::sandbox;
 use graft_lib::state::Session;
+use sandbox_repo::sandbox;
 
 fn session(name: &str) -> (PathBuf, Session) {
     let root = std::env::temp_dir().join(format!("graft-assistant-{name}-{}", std::process::id()));
-    sandbox::generate(&root).expect("generate demo repository");
-    let session = Session::open(&root).expect("open demo repository");
+    sandbox::generate(&root).expect("generate sandbox repository");
+    let session = Session::open(&root).expect("open sandbox repository");
     (root, session)
 }
 
 #[test]
-fn offline_audit_flags_the_regressions_planted_in_the_demo() {
+fn offline_audit_flags_the_regressions_planted_in_the_sandbox() {
     let (root, session) = session("audit");
     let analysis = session.analyze(&DiffTarget::Unstaged).expect("analyze");
 

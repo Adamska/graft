@@ -1,5 +1,6 @@
 #[path = "common/repo.rs"]
 mod repo;
+mod sandbox_repo;
 
 use graft_lib::git::sync::{self, PullMode, Tracking};
 use graft_lib::git::{branch, cli};

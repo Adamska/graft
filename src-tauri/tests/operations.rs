@@ -1,5 +1,6 @@
 #[path = "common/repo.rs"]
 mod repo;
+mod sandbox_repo;
 
 use graft_lib::git::operation::{self, ConflictSide, MergeMode, Operation, ResetMode, Step};
 use graft_lib::git::{branch, stash, status, ChangeStatus};

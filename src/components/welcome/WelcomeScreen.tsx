@@ -8,7 +8,6 @@ export function WelcomeScreen({ dragging }: { dragging: boolean }) {
   const recents = useRepoStore((state) => state.recents);
   const pickRepository = useRepoStore((state) => state.pickRepository);
   const openRepository = useRepoStore((state) => state.openRepository);
-  const openDemo = useRepoStore((state) => state.openDemo);
   const now = Date.now() / 1000;
 
   return (
@@ -24,7 +23,6 @@ export function WelcomeScreen({ dragging }: { dragging: boolean }) {
 
         <div className="mt-7 flex flex-col gap-2">
           <Action label="Open Repository" hint="⌘O" disabled={opening} onClick={() => void pickRepository()} primary />
-          <Action label="Open Built-In Refactor Demo Repo" hint="20 commits · 5 branches" disabled={opening} onClick={() => void openDemo()} />
         </div>
         <p className="mt-3 text-[12px] text-faint">{opening ? "Opening repository…" : "Or drop a repository folder anywhere in this window."}</p>
 
