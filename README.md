@@ -1,3 +1,5 @@
+<img src="docs/logo.png" alt="Graft logo" width="112">
+
 # Graft
 
 A native Git client that diffs syntax trees instead of lines.

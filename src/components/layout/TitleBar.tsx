@@ -1,3 +1,4 @@
+import logo from "../../assets/logo.png";
 import { actions } from "../../lib/actions";
 import { useRepoStore } from "../../store/useRepoStore";
 import { useUiStore } from "../../store/useUiStore";
@@ -48,7 +49,8 @@ export function TitleBar() {
           </IconButton>
         </>
       ) : (
-        <span data-tauri-drag-region className="flex-1 text-slate">
+        <span data-tauri-drag-region className="flex flex-1 items-center gap-2 text-slate">
+          <img src={logo} alt="" width={16} height={16} draggable={false} className="pointer-events-none" />
           Graft
         </span>
       )}
