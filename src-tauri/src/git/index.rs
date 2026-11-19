@@ -60,25 +60,38 @@ pub fn write_staged_text(root: &Path, path: &str, text: &str) -> Result<()> {
     cli::run(root, &["update-index", "--add", "--cacheinfo", &format!("{mode},{oid},{path}")]).map(drop)
 }
 
-/// Commits the index and returns the new commit id.
-pub fn commit(root: &Path, message: &str) -> Result<String> {
-    if message.trim().is_empty() {
-        return Err(Error::invalid("commit message is empty"));
-    }
-    cli::run_with_input(root, &["commit", "--quiet", "--file", "-"], message.as_bytes())?;
+/// Restores tracked files from the index and deletes untracked ones.
+pub fn discard_paths(root: &Path, paths: &[String]) -> Result<()> {
+    let mut listing = vec!["ls-files", "-z", "--"];
+    listing.extend(paths.iter().map(String::as_str));
+    let known = cli::run(root, &listing)?;
+    let (tracked, untracked): (Vec<String>, Vec<String>) =
+        paths.iter().cloned().partition(|path| known.split('\0').any(|entry| entry == path));
+    run_with_paths(root, &["checkout", "--quiet", "--"], &tracked)?;
+    run_with_paths(root, &["clean", "--quiet", "--force", "--"], &untracked)
+}
+
+/// Commits the index and returns the new commit id. Amending replaces the last commit,
+/// reusing its message when none is given.
+pub fn commit(root: &Path, message: &str, amend: bool) -> Result<String> {
+    match (amend, message.trim().is_empty()) {
+        (false, true) => return Err(Error::invalid("commit message is empty")),
+        (false, false) => cli::run_with_input(root, &["commit", "--quiet", "--file", "-"], message.as_bytes())?,
+        (true, false) => {
+            cli::run_with_input(root, &["commit", "--quiet", "--amend", "--file", "-"], message.as_bytes())?
+        }
+        (true, true) => cli::run(root, &["commit", "--quiet", "--amend", "--no-edit"])?,
+    };
     cli::run(root, &["rev-parse", "HEAD"])
+}
+
+/// Full message of the `HEAD` commit, used to prefill an amend.
+pub fn head_message(root: &Path) -> Result<String> {
+    cli::run(root, &["log", "-1", "--format=%B"])
 }
 
 pub fn checkout(root: &Path, revision: &str, detach: bool) -> Result<()> {
     let args: &[&str] =
         if detach { &["checkout", "--quiet", "--detach", revision] } else { &["checkout", "--quiet", revision] };
     cli::run(root, args).map(drop)
-}
-
-/// Cherry-picks `oid`; on conflict the pick is aborted so the tree is never left half-applied.
-pub fn cherry_pick(root: &Path, oid: &str) -> Result<()> {
-    cli::run(root, &["cherry-pick", oid]).map(drop).map_err(|error| {
-        let _ = cli::run(root, &["cherry-pick", "--abort"]);
-        Error::Git(format!("cherry-pick stopped and was rolled back: {error}"))
-    })
 }

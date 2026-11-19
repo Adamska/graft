@@ -37,6 +37,9 @@ const fn commit(
 
 pub const TAGS: [(&str, &str); 2] = [("c5", "v0.1.0"), ("c8", "v0.2.0")];
 
+/// Topic branches that also exist on the sandbox remote.
+pub const PUBLISHED: [&str; 2] = [ROTATION, HOTFIX];
+
 /// Uncommitted work left in the sandbox: `(path, revision, staged)`.
 pub const PENDING: [(&str, Version, bool); 4] = [
     ("web/api.ts", ApiTimeout, true),

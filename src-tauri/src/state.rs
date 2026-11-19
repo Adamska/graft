@@ -74,6 +74,12 @@ impl Session {
         Ok(analysis)
     }
 
+    /// Runs a command that changes the repository, dropping analyses it may invalidate.
+    pub fn mutate<T>(&self, action: impl FnOnce(&std::path::Path) -> Result<T>) -> Result<T> {
+        self.invalidate_working();
+        action(&self.root)
+    }
+
     /// Drops analyses of the index and working tree after either has been mutated.
     pub fn invalidate_working(&self) {
         if let Ok(mut cache) = self.analyses.lock() {

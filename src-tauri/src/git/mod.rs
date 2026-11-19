@@ -1,10 +1,14 @@
+pub mod branch;
 pub mod cli;
 pub mod content;
 pub mod graph;
 pub mod index;
+pub mod operation;
 pub mod repo;
 pub mod search;
+pub mod stash;
 pub mod status;
+pub mod sync;
 pub mod walk;
 pub mod wire;
 

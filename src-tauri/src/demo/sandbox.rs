@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 use std::path::Path;
 
-use super::history::{AUTHORS, PENDING, SCRIPT, TAGS};
+use super::history::{AUTHORS, PENDING, PUBLISHED, SCRIPT, TAGS};
 use crate::error::Result;
 use crate::git::cli;
 
@@ -11,7 +11,7 @@ const EPOCH: u64 = 1_788_220_800;
 const COMMIT_SPACING_SECONDS: u64 = 19 * 3600;
 
 /// Recreates the demo repository at `root`: a multi-branch history imported in a single
-/// `git fast-import` pass, plus staged, unstaged, and untracked working tree changes.
+/// `git fast-import` pass, a local remote, and staged, unstaged, and untracked changes.
 pub fn generate(root: &Path) -> Result<()> {
     if root.join(".git").exists() {
         std::fs::remove_dir_all(root)?;
@@ -26,6 +26,8 @@ pub fn generate(root: &Path) -> Result<()> {
         cli::run(root, &["config", key, value])?;
     }
 
+    publish(root)?;
+
     for (path, version, staged) in PENDING {
         let target = root.join(path);
         if let Some(parent) = target.parent() {
@@ -35,6 +37,21 @@ pub fn generate(root: &Path) -> Result<()> {
         if staged {
             cli::run(root, &["add", path])?;
         }
+    }
+    Ok(())
+}
+
+/// Gives the sandbox a remote that works offline: a bare repository kept inside its own
+/// `.git` directory. `main` is left one commit ahead of it so there is something to push.
+fn publish(root: &Path) -> Result<()> {
+    let origin = root.join(".git").join("relay-origin.git").display().to_string();
+    cli::run(root, &["init", "--quiet", "--bare", "--initial-branch=main", &origin])?;
+    cli::run(root, &["remote", "add", "origin", &origin])?;
+    let mut push = vec!["push", "--quiet", "origin", "--tags", "main~1:refs/heads/main"];
+    push.extend(PUBLISHED);
+    cli::run(root, &push)?;
+    for branch in std::iter::once("main").chain(PUBLISHED) {
+        cli::run(root, &["branch", "--quiet", &format!("--set-upstream-to=origin/{branch}"), branch])?;
     }
     Ok(())
 }

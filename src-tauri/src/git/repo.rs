@@ -5,6 +5,7 @@ use gix::ObjectId;
 use serde::Serialize;
 
 use super::content;
+use super::operation::{self, Operation};
 use super::FileChange;
 use crate::error::{GitResultExt, Result};
 
@@ -46,6 +47,8 @@ pub struct RepoSnapshot {
     pub head: Head,
     pub refs: Vec<RefEntry>,
     pub stashes: Vec<Stash>,
+    /// Merge, rebase, cherry-pick, or revert that stopped and awaits the user.
+    pub operation: Option<Operation>,
     #[serde(skip)]
     pub head_id: Option<ObjectId>,
 }
@@ -85,6 +88,7 @@ pub fn snapshot(repo: &gix::Repository) -> Result<RepoSnapshot> {
         },
         refs: collect_refs(repo, head_name.as_ref())?,
         stashes: collect_stashes(repo),
+        operation: operation::in_progress(repo),
         head_id,
     })
 }

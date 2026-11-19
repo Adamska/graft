@@ -8,51 +8,38 @@ use crate::state::AppState;
 
 #[tauri::command(async)]
 pub fn stage_paths(state: State<'_, AppState>, paths: Vec<String>) -> Result<()> {
-    let session = state.session()?;
-    session.invalidate_working();
-    index::stage_paths(&session.root, &paths)
+    state.session()?.mutate(|root| index::stage_paths(root, &paths))
 }
 
 #[tauri::command(async)]
 pub fn unstage_paths(state: State<'_, AppState>, paths: Vec<String>) -> Result<()> {
-    let session = state.session()?;
-    session.invalidate_working();
-    index::unstage_paths(&session.root, &paths)
+    state.session()?.mutate(|root| index::unstage_paths(root, &paths))
+}
+
+/// Restores tracked files from the index and deletes untracked ones.
+#[tauri::command(async)]
+pub fn discard_paths(state: State<'_, AppState>, paths: Vec<String>) -> Result<()> {
+    state.session()?.mutate(|root| index::discard_paths(root, &paths))
 }
 
 /// Stages a single declaration; see [`staging::stage_entity`].
 #[tauri::command(async)]
 pub fn stage_entity(state: State<'_, AppState>, path: String, selector: EntitySelector) -> Result<()> {
-    let session = state.session()?;
-    staging::stage_entity(&session, &path, &selector)
+    staging::stage_entity(&*state.session()?, &path, &selector)
 }
 
 #[tauri::command(async)]
 pub fn unstage_entity(state: State<'_, AppState>, path: String, selector: EntitySelector) -> Result<()> {
-    let session = state.session()?;
-    staging::unstage_entity(&session, &path, &selector)
+    staging::unstage_entity(&*state.session()?, &path, &selector)
 }
 
-/// Commits the index and returns the new commit id.
+/// Commits the index, or amends the last commit, and returns the resulting commit id.
 #[tauri::command(async)]
-pub fn commit_staged(state: State<'_, AppState>, message: String) -> Result<String> {
-    let session = state.session()?;
-    session.invalidate_working();
-    index::commit(&session.root, &message)
+pub fn commit_staged(state: State<'_, AppState>, message: String, amend: bool) -> Result<String> {
+    state.session()?.mutate(|root| index::commit(root, &message, amend))
 }
 
-/// Switches the working tree to a local branch, or detaches at any other revision.
 #[tauri::command(async)]
-pub fn checkout(state: State<'_, AppState>, revision: String, detach: bool) -> Result<()> {
-    let session = state.session()?;
-    session.invalidate_working();
-    index::checkout(&session.root, &revision, detach)
-}
-
-/// Applies the changes of one commit on top of the current branch.
-#[tauri::command(async)]
-pub fn cherry_pick(state: State<'_, AppState>, oid: String) -> Result<()> {
-    let session = state.session()?;
-    session.invalidate_working();
-    index::cherry_pick(&session.root, &oid)
+pub fn head_message(state: State<'_, AppState>) -> Result<String> {
+    index::head_message(&state.session()?.root)
 }

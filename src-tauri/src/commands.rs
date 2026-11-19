@@ -1,5 +1,7 @@
 pub mod assist;
+pub mod branch;
 pub mod diff;
+pub mod sync;
 pub mod work;
 
 use std::path::Path;

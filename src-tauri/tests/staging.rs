@@ -110,7 +110,7 @@ fn commits_the_staged_declaration_only() {
     staging::stage_entity(&session, AUTH, pick(&pending, "is_expired")).expect("stage body edit");
     index::unstage_paths(&session.root, &["web/api.ts".to_string()]).expect("unstage demo file");
 
-    let oid = index::commit(&session.root, "fix(auth): expire tokens at the deadline").expect("commit");
+    let oid = index::commit(&session.root, "fix(auth): expire tokens at the deadline", false).expect("commit");
 
     let committed = changes(&session, &DiffTarget::Commit { oid });
     assert_eq!(names(&committed), [(ChangeKind::Body, "AuthToken::is_expired")]);
