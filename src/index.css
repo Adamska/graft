@@ -20,66 +20,68 @@
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
 }
 
-html,
-body,
-#root {
-  height: 100%;
-}
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
 
-body {
-  margin: 0;
-  overflow: hidden;
-  background: var(--color-obsidian);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.4;
-  font-feature-settings: "cv11", "ss01";
-  -webkit-font-smoothing: antialiased;
-  user-select: none;
-  cursor: default;
-}
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: var(--color-obsidian);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.4;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    cursor: default;
+  }
 
-.font-mono,
-code,
-pre {
-  font-family: var(--font-mono);
-  font-variant-ligatures: none;
-  font-feature-settings: "liga" 0, "calt" 0;
-}
+  .font-mono,
+  code,
+  pre {
+    font-family: var(--font-mono);
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+  }
 
-::selection {
-  background: rgba(6, 182, 212, 0.28);
-}
+  ::selection {
+    background: rgba(6, 182, 212, 0.28);
+  }
 
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
 
-*::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border: 3px solid transparent;
-  border-radius: 5px;
-  background-clip: content-box;
-}
+  *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border: 3px solid transparent;
+    border-radius: 5px;
+    background-clip: content-box;
+  }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border: 3px solid transparent;
-  background-clip: content-box;
-}
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
 
-*::-webkit-scrollbar-corner,
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
+  *::-webkit-scrollbar-corner,
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-button {
-  cursor: default;
-}
+  button {
+    cursor: default;
+  }
 
-:focus-visible {
-  outline: 1px solid rgba(6, 182, 212, 0.7);
-  outline-offset: -1px;
+  :focus-visible {
+    outline: 1px solid rgba(6, 182, 212, 0.7);
+    outline-offset: -1px;
+  }
 }

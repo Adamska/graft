@@ -14,6 +14,7 @@ use crate::error::{Error, GitResultExt, Result};
 use crate::git::graph::{self, GraphStats};
 use crate::git::repo::{self, CommitDetails, RepoSnapshot};
 use crate::git::status::{self, WorkingStatus};
+use crate::recent::{self, RecentRepository};
 use crate::state::{AppState, Session};
 
 const DEFAULT_SEARCH_LIMIT: usize = 500;
@@ -25,9 +26,17 @@ pub struct EngineMetrics {
 }
 
 #[tauri::command(async)]
-pub fn open_repository(state: State<'_, AppState>, path: String) -> Result<RepoSnapshot> {
-    let session = state.activate(Session::open(Path::new(&path))?);
-    Ok(session.snapshot())
+pub fn open_repository(app: AppHandle, state: State<'_, AppState>, path: String) -> Result<RepoSnapshot> {
+    let snapshot = state.activate(Session::open(Path::new(&path))?).snapshot();
+    if let Ok(config_dir) = app.path().app_config_dir() {
+        recent::remember(&config_dir, &snapshot.path, &snapshot.name)?;
+    }
+    Ok(snapshot)
+}
+
+#[tauri::command(async)]
+pub fn recent_repositories(app: AppHandle) -> Vec<RecentRepository> {
+    app.path().app_config_dir().map(|config_dir| recent::list(&config_dir)).unwrap_or_default()
 }
 
 #[tauri::command(async)]

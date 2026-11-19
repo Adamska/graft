@@ -4,6 +4,7 @@ pub mod commands;
 pub mod demo;
 pub mod error;
 pub mod git;
+pub mod recent;
 pub mod state;
 
 pub fn run() {
@@ -12,6 +13,7 @@ pub fn run() {
         .manage(state::AppState::default())
         .invoke_handler(tauri::generate_handler![
             commands::open_repository,
+            commands::recent_repositories,
             commands::refresh_repository,
             commands::stream_graph,
             commands::search_commits,
