@@ -96,6 +96,12 @@ pub fn align(old: &Side<'_>, new: &Side<'_>, context: Option<usize>) -> Vec<Row>
     }
 }
 
+/// Every line of a file with syntax classes and no change marks.
+pub fn plain(file: &ParsedFile) -> Vec<Line> {
+    let side = Side::whole(file);
+    (0..side.lines.len()).map(|at| side.line(at, None)).collect()
+}
+
 pub fn has_changes(rows: &[Row]) -> bool {
     rows.iter().any(|row| !matches!(row.kind, RowKind::Context | RowKind::Fold))
 }

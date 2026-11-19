@@ -25,6 +25,8 @@ pub fn run() {
             commands::diff::analyze_changeset,
             commands::diff::file_diff,
             commands::diff::raw_diff,
+            commands::diff::blame_file,
+            commands::diff::file_history,
             commands::work::stage_paths,
             commands::work::unstage_paths,
             commands::work::discard_paths,
