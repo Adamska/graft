@@ -1,6 +1,21 @@
+pub mod commands;
+pub mod error;
+pub mod git;
+pub mod state;
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .manage(state::AppState::default())
+        .invoke_handler(tauri::generate_handler![
+            commands::open_repository,
+            commands::refresh_repository,
+            commands::stream_graph,
+            commands::search_commits,
+            commands::commit_details,
+            commands::working_status,
+            commands::engine_metrics,
+        ])
         .run(tauri::generate_context!())
         .expect("failed to launch the Graft window");
 }

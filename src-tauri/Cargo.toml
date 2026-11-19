@@ -18,6 +18,10 @@ tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
+gix = { version = "0.90", default-features = false, features = ["blob-diff", "index", "max-performance", "revision", "sha1", "status"] }
+rayon = "1.12.0"
+smallvec = "1.16.6"
+memory-stats = "1.2.0"
 
 [profile.release]
 codegen-units = 1
