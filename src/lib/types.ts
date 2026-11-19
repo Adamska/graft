@@ -154,3 +154,44 @@ export interface EntitySelector {
   old_start: number | null;
   new_start: number | null;
 }
+
+export type Severity = "high" | "medium" | "low";
+
+export interface RiskFinding {
+  path: string;
+  symbol: string;
+  severity: Severity;
+  title: string;
+  detail: string;
+  source: string;
+}
+
+export interface RiskReport {
+  findings: RiskFinding[];
+  model: string | null;
+  notice: string | null;
+}
+
+export interface CommitDraft {
+  message: string;
+  model: string | null;
+  notice: string | null;
+}
+
+export type AssistantProvider = "anthropic" | "openai" | "ollama";
+
+export interface AssistantStatus {
+  provider: AssistantProvider | null;
+  base_url: string | null;
+  model: string | null;
+  has_key: boolean;
+  ready: boolean;
+  detail: string;
+}
+
+export interface AssistantSettings {
+  provider: AssistantProvider | null;
+  base_url: string | null;
+  model: string | null;
+  api_key: string | null;
+}

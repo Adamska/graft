@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { Block, DiffLine, DiffTarget, RowKind } from "../../lib/types";
+import type { Block, DiffLine, DiffTarget, RiskFinding, RowKind, Severity } from "../../lib/types";
 import { ChevronIcon } from "../ui/icons";
 import { badgeFor, detailFor, ENTITY_LABELS, lineRange, qualifier, TONE_CLASSES, toneOf } from "./blockLabels";
 import { ROW_HEIGHTS, type VisualRow } from "./visualRows";
@@ -111,6 +111,19 @@ function Origin({ block, side, actions }: { block: Block; side: Side; actions: R
   );
 }
 
+const SEVERITY: Record<Severity, string> = { high: "bg-del", medium: "bg-edited", low: "bg-slate" };
+
+function Risk({ finding, shown }: { finding: RiskFinding; shown: boolean }) {
+  if (!shown) return <div className="void-cell h-full" />;
+  return (
+    <div className="flex h-full items-center gap-2 border-l-2 border-edited/70 bg-edited/[0.06] pl-3 pr-2 text-[11.5px]" title={`${finding.detail} (${finding.source})`}>
+      <span className={`size-1.5 shrink-0 rounded-full ${SEVERITY[finding.severity]}`} />
+      <span className="shrink-0 font-medium text-ink">{finding.title}</span>
+      <span className="min-w-0 truncate text-slate">{finding.detail}</span>
+    </div>
+  );
+}
+
 /** One row of one pane; both panes render the same row list so they stay aligned. */
 export const PaneRow = memo(function PaneRow({ row, side, width, actions }: { row: VisualRow; side: Side; width: number; actions: RowActions }) {
   const height = ROW_HEIGHTS[row.kind];
@@ -137,6 +150,7 @@ export const PaneRow = memo(function PaneRow({ row, side, width, actions }: { ro
           </div>
         )}
         {row.kind === "origin" && <Origin block={row.block} side={side} actions={actions} />}
+        {row.kind === "risk" && <Risk finding={row.finding} shown={side === (row.block.new ? "new" : "old")} />}
         {row.kind === "fold" && (
           <div className="flex h-full items-center bg-white/[0.02] pl-11 font-mono text-[10.5px] text-faint">
             {side === "old" ? `⋯ ${row.hidden} unchanged ${row.hidden === 1 ? "line" : "lines"}` : ""}

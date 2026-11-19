@@ -68,3 +68,17 @@ pub fn commit(root: &Path, message: &str) -> Result<String> {
     cli::run_with_input(root, &["commit", "--quiet", "--file", "-"], message.as_bytes())?;
     cli::run(root, &["rev-parse", "HEAD"])
 }
+
+pub fn checkout(root: &Path, revision: &str, detach: bool) -> Result<()> {
+    let args: &[&str] =
+        if detach { &["checkout", "--quiet", "--detach", revision] } else { &["checkout", "--quiet", revision] };
+    cli::run(root, args).map(drop)
+}
+
+/// Cherry-picks `oid`; on conflict the pick is aborted so the tree is never left half-applied.
+pub fn cherry_pick(root: &Path, oid: &str) -> Result<()> {
+    cli::run(root, &["cherry-pick", oid]).map(drop).map_err(|error| {
+        let _ = cli::run(root, &["cherry-pick", "--abort"]);
+        Error::Git(format!("cherry-pick stopped and was rolled back: {error}"))
+    })
+}

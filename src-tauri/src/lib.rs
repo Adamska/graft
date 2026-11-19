@@ -1,3 +1,4 @@
+pub mod ai;
 pub mod ast_diff;
 pub mod changeset;
 pub mod commands;
@@ -28,6 +29,12 @@ pub fn run() {
             commands::work::stage_entity,
             commands::work::unstage_entity,
             commands::work::commit_staged,
+            commands::work::checkout,
+            commands::work::cherry_pick,
+            commands::assist::generate_commit_message,
+            commands::assist::review_risks,
+            commands::assist::assistant_status,
+            commands::assist::save_assistant_settings,
             commands::create_demo_repository,
             commands::engine_metrics,
         ])

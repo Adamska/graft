@@ -1,9 +1,10 @@
-import type { Block, DiffRow } from "../../lib/types";
+import type { Block, DiffRow, RiskFinding } from "../../lib/types";
 
-export const ROW_HEIGHTS = { header: 30, code: 20, fold: 22, origin: 26, gap: 14 } as const;
+export const ROW_HEIGHTS = { header: 30, risk: 24, code: 20, fold: 22, origin: 26, gap: 14 } as const;
 
 export type VisualRow =
   | { kind: "header"; block: Block; collapsed: boolean }
+  | { kind: "risk"; block: Block; finding: RiskFinding }
   | { kind: "code"; block: Block; row: DiffRow }
   | { kind: "fold"; block: Block; hidden: number }
   | { kind: "origin"; block: Block }
@@ -33,8 +34,11 @@ export function isCollapsible(block: Block): boolean {
   return block.kind === "moved";
 }
 
-/** Flattens blocks into fixed-height rows so the viewer can window them by offset. */
-export function buildLayout(blocks: Block[], expanded: ReadonlySet<number>): DiffLayout {
+/**
+ * Flattens blocks into fixed-height rows so the viewer can window them by offset.
+ * Review findings become rows directly under the declaration they are about.
+ */
+export function buildLayout(blocks: Block[], expanded: ReadonlySet<number>, findings: RiskFinding[] = []): DiffLayout {
   const rows: VisualRow[] = [];
   const headerRow = new Map<number, number>();
   const lastRow = new Map<number, number>();
@@ -47,6 +51,9 @@ export function buildLayout(blocks: Block[], expanded: ReadonlySet<number>): Dif
     } else {
       const collapsed = isCollapsible(block) && !expanded.has(block.id);
       rows.push({ kind: "header", block, collapsed });
+      for (const finding of findings) {
+        if (finding.symbol === block.qualified && block.qualified !== "") rows.push({ kind: "risk", block, finding });
+      }
       if (!collapsed) {
         for (const row of block.rows) {
           rows.push(row.kind === "fold" ? { kind: "fold", block, hidden: row.hidden } : { kind: "code", block, row });

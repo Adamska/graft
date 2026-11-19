@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useAssistStore } from "../../store/useAssistStore";
 import { useDiffStore } from "../../store/useDiffStore";
 import { useRepoStore } from "../../store/useRepoStore";
+import { SparkIcon } from "../ui/icons";
 
 export const COMMIT_BAR_INSET = 132;
 
@@ -8,7 +10,12 @@ export const COMMIT_BAR_INSET = 132;
 export function CommitBar() {
   const staged = useRepoStore((state) => state.status.staged.length);
   const commit = useDiffStore((state) => state.commit);
-  const [message, setMessage] = useState("");
+  const changed = useRepoStore((state) => state.status.unstaged.length);
+  const message = useAssistStore((state) => state.commitMessage);
+  const setMessage = useAssistStore((state) => state.setCommitMessage);
+  const draftSource = useAssistStore((state) => state.draftSource);
+  const generating = useAssistStore((state) => state.generating);
+  const generate = useAssistStore((state) => state.generate);
   const [busy, setBusy] = useState(false);
   const ready = staged > 0 && message.trim() !== "" && !busy;
 
@@ -34,7 +41,7 @@ export function CommitBar() {
         onKeyDown={(event) => {
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void submit();
         }}
-        rows={2}
+        rows={Math.min(8, Math.max(2, message.split("\n").length))}
         spellCheck={false}
         placeholder={staged > 0 ? "Commit message" : "Stage a file or a single function to commit"}
         className="block w-full resize-none bg-transparent px-3 pt-2.5 font-mono text-[12px] leading-[18px] text-ink outline-none placeholder:text-faint"
@@ -43,7 +50,18 @@ export function CommitBar() {
         <span className={`tabular-nums ${staged > 0 ? "text-add" : "text-faint"}`}>
           {staged} {staged === 1 ? "file" : "files"} staged
         </span>
-        <span className="ml-auto font-mono text-[10.5px] text-faint">⌘↵</span>
+        {draftSource && <span className="truncate text-faint">drafted by {draftSource}</span>}
+        <button
+          type="button"
+          disabled={generating || staged + changed === 0}
+          onClick={() => void generate()}
+          title="Draft a Conventional Commit message from the structural diff"
+          className="ml-auto flex items-center gap-1.5 border border-line-strong px-2 leading-[22px] text-ink hover:border-moved/60 hover:bg-moved/[0.06] disabled:text-faint"
+        >
+          <SparkIcon width={12} height={12} />
+          {generating ? "Generating" : "Generate"}
+        </button>
+        <span className="font-mono text-[10.5px] text-faint">⌘↵</span>
         <button
           type="submit"
           disabled={!ready}

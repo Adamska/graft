@@ -13,6 +13,7 @@ export function InspectorPane() {
   const selection = useRepoStore((state) => state.selection);
   const details = useRepoStore((state) => state.details);
   const setFocus = useUiStore((state) => state.setFocus);
+  const focused = useUiStore((state) => state.focus === "inspector");
   const working = selection.kind === "working";
 
   return (
@@ -24,6 +25,7 @@ export function InspectorPane() {
         <DiffBody bottomInset={working ? COMMIT_BAR_INSET : 0} />
       </div>
       {working && <CommitBar />}
+      {focused && <span className="pointer-events-none absolute inset-x-0 top-0 z-30 h-px bg-moved/70" />}
     </section>
   );
 }

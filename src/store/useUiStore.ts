@@ -12,6 +12,10 @@ interface UiState {
   graphWidth: number;
   focus: FocusRegion;
   notice: Notice | null;
+  paletteOpen: boolean;
+  settingsOpen: boolean;
+  setPaletteOpen: (open: boolean) => void;
+  setSettingsOpen: (open: boolean) => void;
   toggleSidebar: () => void;
   setGraphWidth: (width: number) => void;
   setFocus: (focus: FocusRegion) => void;
@@ -28,6 +32,10 @@ export const useUiStore = create<UiState>((set) => ({
   graphWidth: GRAPH_WIDTH.initial,
   focus: "graph",
   notice: null,
+  paletteOpen: false,
+  settingsOpen: false,
+  setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen, paletteOpen: false }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setGraphWidth: (width) => set({ graphWidth: Math.min(GRAPH_WIDTH.max, Math.max(GRAPH_WIDTH.min, width)) }),
   setFocus: (focus) => set({ focus }),

@@ -26,6 +26,7 @@ export function GraphPane() {
         <CommitGraphCanvas />
       </div>
       <ResizeHandle />
+      {focused && <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-moved/70" />}
     </section>
   );
 }

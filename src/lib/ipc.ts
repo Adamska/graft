@@ -1,7 +1,10 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 import type {
+  AssistantSettings,
+  AssistantStatus,
   ChangesetSummary,
   CommitDetails,
+  CommitDraft,
   DiffRow,
   DiffTarget,
   EngineMetrics,
@@ -10,6 +13,7 @@ import type {
   GraphStats,
   RecentRepository,
   RepoSnapshot,
+  RiskReport,
   WorkingStatus,
 } from "./types";
 
@@ -30,6 +34,13 @@ export const ipc = {
   stageEntity: (path: string, selector: EntitySelector) => invoke<void>("stage_entity", { path, selector }),
   unstageEntity: (path: string, selector: EntitySelector) => invoke<void>("unstage_entity", { path, selector }),
   commitStaged: (message: string) => invoke<string>("commit_staged", { message }),
+  checkout: (revision: string, detach: boolean) => invoke<void>("checkout", { revision, detach }),
+  cherryPick: (oid: string) => invoke<void>("cherry_pick", { oid }),
+
+  generateCommitMessage: () => invoke<CommitDraft>("generate_commit_message"),
+  reviewRisks: (target: DiffTarget) => invoke<RiskReport>("review_risks", { target }),
+  assistantStatus: () => invoke<AssistantStatus>("assistant_status"),
+  saveAssistantSettings: (settings: AssistantSettings) => invoke<AssistantStatus>("save_assistant_settings", { settings }),
 
   /** Streams binary graph chunks; resolves once the whole history has been sent. */
   streamGraph(onChunk: (frame: ArrayBuffer) => void): Promise<GraphStats> {

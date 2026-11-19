@@ -40,3 +40,19 @@ pub fn commit_staged(state: State<'_, AppState>, message: String) -> Result<Stri
     session.invalidate_working();
     index::commit(&session.root, &message)
 }
+
+/// Switches the working tree to a local branch, or detaches at any other revision.
+#[tauri::command(async)]
+pub fn checkout(state: State<'_, AppState>, revision: String, detach: bool) -> Result<()> {
+    let session = state.session()?;
+    session.invalidate_working();
+    index::checkout(&session.root, &revision, detach)
+}
+
+/// Applies the changes of one commit on top of the current branch.
+#[tauri::command(async)]
+pub fn cherry_pick(state: State<'_, AppState>, oid: String) -> Result<()> {
+    let session = state.session()?;
+    session.invalidate_working();
+    index::cherry_pick(&session.root, &oid)
+}

@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import type { FileDiff } from "../../lib/types";
+import { findingsFor, useAssistStore } from "../../store/useAssistStore";
 import { useDiffStore, visibleBlocks } from "../../store/useDiffStore";
 import { GUTTER_WIDTH, MoveRibbonOverlay } from "./MoveRibbonOverlay";
 import { PaneRow, type RowActions, type Side } from "./PaneRows";
@@ -24,7 +26,8 @@ export function StructuralDiffView({ file, bottomInset }: { file: FileDiff; bott
   const toggleBlockStage = useDiffStore((state) => state.toggleBlockStage);
   const open = useDiffStore((state) => state.open);
 
-  const layout = useMemo(() => buildLayout(visibleBlocks(file, showMoved), expanded), [file, showMoved, expanded]);
+  const findings = useAssistStore(useShallow((state) => findingsFor(state, target, file.path)));
+  const layout = useMemo(() => buildLayout(visibleBlocks(file, showMoved), expanded, findings), [file, showMoved, expanded, findings]);
   const total = layout.offsets[layout.rows.length] ?? 0;
   const first = rowAt(layout.offsets, viewport.top - OVERSCAN);
   const last = rowAt(layout.offsets, viewport.top + viewport.height + OVERSCAN);
