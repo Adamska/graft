@@ -84,7 +84,8 @@ pub struct ChangesetSummary {
     pub micros: u64,
 }
 
-/// Parses every file on all cores, then matches declarations across the changeset.
+/// Parses every file, and both sides of each file, in parallel, then matches
+/// declarations across the whole changeset.
 pub fn analyze(sources: Vec<SourcePair>) -> Analysis {
     let started = Instant::now();
     let files: Vec<FilePair> = sources
@@ -92,12 +93,12 @@ pub fn analyze(sources: Vec<SourcePair>) -> Analysis {
         .map_init(Parser::new, |parser, source| {
             let binary = source.old.is_none() || source.new.is_none();
             let old_path = source.change.old_path.clone().unwrap_or_else(|| source.change.path.clone());
-            FilePair {
-                old: parser::parse(source.old.unwrap_or_default(), &old_path, parser),
-                new: parser::parse(source.new.unwrap_or_default(), &source.change.path, parser),
-                change: source.change,
-                binary,
-            }
+            let (old_text, new_text) = (source.old.unwrap_or_default(), source.new.unwrap_or_default());
+            let (old, new) = rayon::join(
+                || parser::parse(old_text, &old_path, &mut Parser::new()),
+                || parser::parse(new_text, &source.change.path, parser),
+            );
+            FilePair { old, new, change: source.change, binary }
         })
         .collect();
     let (changes, origins) = matcher::changes(&files);
