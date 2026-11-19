@@ -67,6 +67,8 @@ npm run tauri build
 
 The bundle is written to `src-tauri/target/release/bundle/`.
 
+On macOS, `npm run install:mac` builds `Graft.app` and copies it to `/Applications`, so it can be opened from Spotlight, Launchpad, or the Dock. Run it again after pulling changes to update the installed copy.
+
 ### Test
 
 ```bash
