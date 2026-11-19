@@ -3,21 +3,29 @@
 @import "@fontsource-variable/jetbrains-mono";
 
 @theme {
-  --color-obsidian: #090a0d;
-  --color-surface: #101217;
-  --color-raised: #171a21;
-  --color-line: rgba(255, 255, 255, 0.08);
-  --color-line-strong: rgba(255, 255, 255, 0.14);
-  --color-ink: #ededef;
-  --color-slate: #7e8594;
-  --color-faint: #4d5361;
-  --color-add: #10b981;
-  --color-del: #ef4444;
-  --color-moved: #06b6d4;
-  --color-edited: #f59e0b;
+  --color-canvas: #1b1d23;
+  --color-surface: #20232a;
+  --color-raised: #282c35;
+  --color-line: rgba(255, 255, 255, 0.07);
+  --color-line-strong: rgba(255, 255, 255, 0.13);
+  --color-hover: rgba(255, 255, 255, 0.04);
+  --color-active: rgba(255, 255, 255, 0.08);
+  --color-ink: #dcdfe6;
+  --color-soft: #b7bcc8;
+  --color-slate: #8a91a0;
+  --color-faint: #5f6674;
+  --color-accent: #7aa7ec;
+  --color-add: #4fc08d;
+  --color-del: #e6767e;
+  --color-moved: #57b8d2;
+  --color-edited: #dfa956;
 
   --font-sans: "Inter Variable", "Geist", system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-control: 5px;
+  --radius-panel: 9px;
+  --shadow-float: 0 14px 40px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
 @layer base {
@@ -30,11 +38,11 @@
   body {
     margin: 0;
     overflow: hidden;
-    background: var(--color-obsidian);
+    background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.45;
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     user-select: none;
@@ -50,7 +58,7 @@
   }
 
   ::selection {
-    background: rgba(6, 182, 212, 0.28);
+    background: rgba(122, 167, 236, 0.3);
   }
 
   *::-webkit-scrollbar {
@@ -81,7 +89,7 @@
   }
 
   :focus-visible {
-    outline: 1px solid rgba(6, 182, 212, 0.7);
+    outline: 1px solid rgba(122, 167, 236, 0.75);
     outline-offset: -1px;
   }
 }
@@ -95,21 +103,21 @@
     font-feature-settings: "liga" 0, "calt" 0;
     white-space: pre;
     tab-size: 4;
-    color: #d5d7dc;
+    color: #cdd1da;
   }
 
   .tok-1 { color: #9db1d6; }
   .tok-2 { color: #b5c18a; }
   .tok-3 { color: #d4a373; }
-  .tok-4 { color: #5a6072; font-style: italic; }
+  .tok-4 { color: #6b7281; font-style: italic; }
   .tok-5 { color: #a9c4c9; }
   .tok-6 { color: #e0c285; }
   .tok-7 { color: #b8c0cc; }
-  .tok-8 { color: #7e8594; }
+  .tok-8 { color: #8a91a0; }
   .tok-9 { color: #d4a373; }
 
-  .mark-old { background: rgba(239, 68, 68, 0.3); border-radius: 2px; }
-  .mark-new { background: rgba(16, 185, 129, 0.3); border-radius: 2px; }
+  .mark-old { background: rgba(230, 118, 126, 0.3); border-radius: 2px; }
+  .mark-new { background: rgba(79, 192, 141, 0.28); border-radius: 2px; }
 
   .void-cell {
     background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 6px);

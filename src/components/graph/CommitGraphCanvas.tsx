@@ -60,7 +60,7 @@ export function CommitGraphCanvas() {
     const limit = maxScroll();
     if (limit > 0) {
       const thumb = Math.max(MIN_THUMB, (view.height * view.height) / (limit + view.height));
-      ctx.fillStyle = view.dragOffset === null ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.3)";
+      ctx.fillStyle = view.dragOffset === null ? COLORS.thumb : COLORS.thumbActive;
       ctx.beginPath();
       ctx.roundRect(view.width - 7, (view.scrollTop / limit) * (view.height - thumb) + 2, 4, thumb - 4, 2);
       ctx.fill();

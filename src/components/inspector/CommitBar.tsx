@@ -28,7 +28,7 @@ export function CommitBar() {
 
   return (
     <form
-      className="absolute inset-x-4 bottom-3 z-20 border border-line-strong bg-raised shadow-[0_10px_40px_rgba(0,0,0,0.55)]"
+      className="absolute inset-x-4 bottom-3 z-20 border border-line-strong bg-raised shadow-float"
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
@@ -56,7 +56,7 @@ export function CommitBar() {
           disabled={generating || staged + changed === 0}
           onClick={() => void generate()}
           title="Draft a Conventional Commit message from the structural diff"
-          className="ml-auto flex items-center gap-1.5 border border-line-strong px-2 leading-[22px] text-ink hover:border-moved/60 hover:bg-moved/[0.06] disabled:text-faint"
+          className="ml-auto flex items-center gap-1.5 border border-line-strong px-2 leading-[22px] text-ink hover:border-accent/60 hover:bg-accent/[0.06] disabled:text-faint"
         >
           <SparkIcon width={12} height={12} />
           {generating ? "Generating" : "Generate"}
@@ -65,7 +65,7 @@ export function CommitBar() {
         <button
           type="submit"
           disabled={!ready}
-          className="border border-transparent bg-ink px-3 text-[12px] font-medium leading-[22px] text-obsidian hover:bg-white disabled:border-line-strong disabled:bg-transparent disabled:text-faint"
+          className="border border-transparent bg-accent px-3 text-[12px] font-medium leading-[22px] text-canvas hover:bg-accent/85 disabled:border-line-strong disabled:bg-transparent disabled:text-faint"
         >
           {busy ? "Committing" : "Commit"}
         </button>

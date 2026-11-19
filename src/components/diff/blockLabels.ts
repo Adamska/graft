@@ -23,7 +23,7 @@ export const TONE_CLASSES: Record<Tone, string> = {
   edited: "border-edited/50 text-edited",
   add: "border-add/50 text-add",
   del: "border-del/50 text-del",
-  neutral: "border-line-strong text-[#C9CCD3]",
+  neutral: "border-line-strong text-soft",
 };
 
 const TONES: Record<ChangeKind, Tone> = {

@@ -25,7 +25,7 @@ export function FileList({ files, selectedPath, onSelect, trailing }: FileListPr
         const status = STATUS[file.status];
         const selected = file.path === selectedPath;
         return (
-          <li key={file.path} className={`group flex h-7 items-center ${selected ? "bg-white/[0.07]" : "hover:bg-white/[0.035]"}`}>
+          <li key={file.path} className={`group flex h-7 items-center ${selected ? "bg-active" : "hover:bg-hover"}`}>
             <button
               type="button"
               onClick={() => onSelect?.(file)}

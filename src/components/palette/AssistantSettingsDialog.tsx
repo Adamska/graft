@@ -10,7 +10,7 @@ const PROVIDERS: { value: AssistantProvider | null; label: string; model: string
   { value: "ollama", label: "Ollama (local)", model: "model name", url: "http://localhost:11434/v1" },
 ];
 
-const FIELD = "h-8 w-full border border-line-strong bg-obsidian px-2.5 font-mono text-[12px] text-ink outline-none focus:border-moved/70 placeholder:text-faint";
+const FIELD = "h-8 w-full border border-line-strong bg-canvas px-2.5 font-mono text-[12px] text-ink outline-none focus:border-accent/70 placeholder:text-faint";
 
 /** Provider settings for commit drafting and review. Everything here is optional. */
 export function AssistantSettingsDialog() {
@@ -37,9 +37,9 @@ function Dialog() {
   });
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-center bg-black/45 pt-[16vh]" onPointerDown={close}>
+    <div className="fixed inset-0 z-40 flex justify-center bg-black/35 pt-[16vh]" onPointerDown={close}>
       <form
-        className="h-fit w-[460px] border border-line-strong bg-raised p-5 shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
+        className="h-fit w-[460px] border border-line-strong bg-raised p-5 shadow-float"
         onPointerDown={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.key === "Escape" && close()}
         onSubmit={(event) => {
@@ -91,7 +91,7 @@ function Dialog() {
           <button type="button" onClick={close} className="px-2 text-[12px] text-slate hover:text-ink">
             Cancel
           </button>
-          <button type="submit" className="bg-ink px-3 text-[12px] font-medium leading-[24px] text-obsidian hover:bg-white">
+          <button type="submit" className="bg-accent px-3 text-[12px] font-medium leading-[24px] text-canvas hover:bg-accent/85">
             Save
           </button>
         </div>

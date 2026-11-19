@@ -4,19 +4,23 @@ export const GRAPH_PAD = 14;
 export const AGE_WIDTH = 34;
 export const SCROLLBAR_WIDTH = 10;
 
+/** Canvas counterparts of the CSS theme tokens in `index.css`. */
 export const COLORS = {
-  background: "#090A0D",
-  ink: "#EDEDEF",
-  slate: "#7E8594",
-  faint: "#4D5361",
-  hover: "rgba(255,255,255,0.035)",
-  selected: "rgba(255,255,255,0.07)",
-  accent: "#06B6D4",
-  tag: "#D6B26E",
+  background: "#1B1D23",
+  ink: "#DCDFE6",
+  soft: "#B7BCC8",
+  slate: "#8A91A0",
+  faint: "#5F6674",
+  hover: "rgba(255,255,255,0.04)",
+  selected: "rgba(255,255,255,0.08)",
+  thumb: "rgba(255,255,255,0.13)",
+  thumbActive: "rgba(255,255,255,0.26)",
+  accent: "#7AA7EC",
+  tag: "#D2B273",
 } as const;
 
 /** Rail hues, kept clear of the diff accents so a lane never reads as add, delete, or move. */
-export const LANE_COLORS = ["#5B9DF5", "#F2994A", "#2DD4BF", "#F472B6", "#A3E635", "#38BDF8", "#FB7185", "#D6B26E"] as const;
+export const LANE_COLORS = ["#6E9FE8", "#E0A062", "#56C2AE", "#DE8CB7", "#A6C766", "#68BCE4", "#E58991", "#D2B273"] as const;
 
 export const FONTS = {
   summary: '12.5px "Inter Variable", system-ui, sans-serif',

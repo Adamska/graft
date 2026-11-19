@@ -28,7 +28,7 @@ const CodeLine = memo(function CodeLine({ line, side, kind }: { line: DiffLine |
   const mark = side === "old" ? "mark-old" : "mark-new";
   return (
     <div className={`code-line flex h-5 ${ROW_TINT[side][kind] ?? ""}`}>
-      <span className="sticky left-0 z-[1] w-11 shrink-0 select-none bg-obsidian pr-2.5 text-right text-[11px] text-faint">{line.number}</span>
+      <span className="sticky left-0 z-[1] w-11 shrink-0 select-none bg-canvas pr-2.5 text-right text-[11px] text-faint">{line.number}</span>
       <span className="select-text pr-6">
         {line.segments.map(([text, tokenClass, changed], index) => (
           <span key={index} className={`tok-${tokenClass} ${changed ? mark : ""}`}>
@@ -90,7 +90,7 @@ function Origin({ block, side, actions }: { block: Block; side: Side; actions: R
   return (
     <div className="flex h-full items-center gap-2 border border-dashed border-moved/35 bg-moved/[0.04] pl-3 pr-2">
       <span className="size-1.5 shrink-0 rounded-full bg-moved" />
-      <span className="min-w-0 truncate font-mono text-[12px] text-[#C9CCD3]">
+      <span className="min-w-0 truncate font-mono text-[12px] text-soft">
         <span className="text-slate">{qualifier(block)}</span>
         {block.name}
       </span>
@@ -145,7 +145,7 @@ export const PaneRow = memo(function PaneRow({ row, side, width, actions }: { ro
       <div className="sticky left-0 h-full" style={{ width }}>
         {row.kind === "header" && (
           <div className={`relative h-full ${active ? "brightness-125" : ""}`}>
-            {active && side === "old" && <span className="absolute inset-y-0 left-0 z-[2] w-0.5 bg-moved" />}
+            {active && side === "old" && <span className="absolute inset-y-0 left-0 z-[2] w-0.5 bg-accent" />}
             <Header block={row.block} side={side} collapsed={row.collapsed} compact={width < COMPACT_WIDTH} actions={actions} />
           </div>
         )}

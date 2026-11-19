@@ -27,7 +27,7 @@ export function App() {
   }, [loadRecents, openRepository]);
 
   return (
-    <div className={`flex h-full flex-col bg-obsidian text-ink ${dragging && ready ? "outline outline-1 -outline-offset-1 outline-moved" : ""}`}>
+    <div className={`flex h-full flex-col bg-canvas text-ink ${dragging && ready ? "outline outline-1 -outline-offset-1 outline-accent" : ""}`}>
       <TitleBar />
       {ready ? <Workspace /> : <WelcomeScreen dragging={dragging} />}
       <StatusBar />

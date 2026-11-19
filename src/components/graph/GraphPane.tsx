@@ -26,7 +26,7 @@ export function GraphPane() {
         <CommitGraphCanvas />
       </div>
       <ResizeHandle />
-      {focused && <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-moved/70" />}
+      {focused && <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-accent/70" />}
     </section>
   );
 }
@@ -79,10 +79,10 @@ function WorkingTreeRow() {
         selectWorking();
       }}
       className={`relative flex h-8 shrink-0 items-center gap-2.5 border-b border-line pl-[9px] pr-3.5 text-left text-[12.5px] ${
-        selected ? "bg-white/[0.07] text-ink" : "text-[#D5D7DC] hover:bg-white/[0.035]"
+        selected ? "bg-active text-ink" : "text-soft hover:bg-hover"
       }`}
     >
-      {selected && <span className="absolute inset-y-0 left-0 w-0.5 bg-moved" />}
+      {selected && <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" />}
       <span className="size-[9px] rounded-full border-[1.5px] border-dashed border-slate" />
       <span className="flex-1 font-medium">Working tree</span>
       {staged + pending === 0 ? (
@@ -115,7 +115,7 @@ function ResizeHandle() {
       role="separator"
       aria-orientation="vertical"
       onPointerDown={onPointerDown}
-      className="absolute inset-y-0 -right-[3px] z-10 w-[5px] cursor-col-resize hover:bg-moved/40"
+      className="absolute inset-y-0 -right-[3px] z-10 w-[5px] cursor-col-resize hover:bg-accent/40"
     />
   );
 }

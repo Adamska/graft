@@ -17,7 +17,7 @@ export function InspectorPane() {
   const working = selection.kind === "working";
 
   return (
-    <section className="relative flex min-w-0 flex-1 flex-col bg-obsidian" onPointerDown={() => setFocus("inspector")} aria-label="Inspector">
+    <section className="relative flex min-w-0 flex-1 flex-col bg-canvas" onPointerDown={() => setFocus("inspector")} aria-label="Inspector">
       {selection.kind === "commit" && details?.oid === selection.oid && <CommitHeader details={details} />}
       <FilePanel />
       <DiffToolbar />
@@ -25,7 +25,7 @@ export function InspectorPane() {
         <DiffBody bottomInset={working ? COMMIT_BAR_INSET : 0} />
       </div>
       {working && <CommitBar />}
-      {focused && <span className="pointer-events-none absolute inset-x-0 top-0 z-30 h-px bg-moved/70" />}
+      {focused && <span className="pointer-events-none absolute inset-x-0 top-0 z-30 h-px bg-accent/70" />}
     </section>
   );
 }

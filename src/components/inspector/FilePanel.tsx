@@ -6,7 +6,7 @@ import { FileList } from "./FileList";
 const CHIPS: { kinds: ChangeKind[]; symbol: string; label: string; className: string }[] = [
   { kinds: ["moved", "origin"], symbol: "⇄", label: "moved", className: "text-moved" },
   { kinds: ["moved_edited"], symbol: "⇄~", label: "moved and edited", className: "text-edited" },
-  { kinds: ["signature", "body", "modified"], symbol: "~", label: "modified", className: "text-[#C9CCD3]" },
+  { kinds: ["signature", "body", "modified"], symbol: "~", label: "modified", className: "text-soft" },
   { kinds: ["added"], symbol: "+", label: "added", className: "text-add" },
   { kinds: ["deleted"], symbol: "−", label: "deleted", className: "text-del" },
 ];

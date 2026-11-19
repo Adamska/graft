@@ -53,7 +53,7 @@ export function DiffToolbar() {
               role="tab"
               aria-selected={mode === entry.mode}
               onClick={() => setMode(entry.mode)}
-              className={`px-2.5 text-[11.5px] leading-[20px] ${mode === entry.mode ? "bg-white/[0.09] text-ink" : "text-slate hover:text-ink"}`}
+              className={`px-2.5 text-[11.5px] leading-[20px] ${mode === entry.mode ? "bg-active text-ink" : "text-slate hover:text-ink"}`}
             >
               {entry.label}
             </button>

@@ -3,8 +3,8 @@ import type { Ribbon } from "./visualRows";
 export const GUTTER_WIDTH = 44;
 
 const TONES = {
-  moved: { fill: "rgba(6,182,212,0.13)", stroke: "rgba(6,182,212,0.75)" },
-  edited: { fill: "rgba(245,158,11,0.13)", stroke: "rgba(245,158,11,0.8)" },
+  moved: { fill: "rgba(87,184,210,0.13)", stroke: "rgba(87,184,210,0.75)" },
+  edited: { fill: "rgba(223,169,86,0.13)", stroke: "rgba(223,169,86,0.8)" },
 } as const;
 
 interface Props {

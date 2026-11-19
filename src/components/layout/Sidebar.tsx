@@ -106,7 +106,7 @@ function Row({ icon, label, title, active, emphasized, trailing, onClick }: RowP
       title={title}
       onClick={onClick}
       className={`flex h-7 w-full items-center gap-2 pl-7 pr-2.5 text-left text-[12.5px] ${
-        active ? "bg-white/[0.07] text-ink" : "text-[#C9CCD3] hover:bg-white/[0.035]"
+        active ? "bg-active text-ink" : "text-soft hover:bg-hover"
       }`}
     >
       <span className={emphasized ? "text-add" : "text-slate"}>{icon}</span>

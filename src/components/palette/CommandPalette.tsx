@@ -68,11 +68,11 @@ function Palette() {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-center bg-black/45 pt-[14vh]" onPointerDown={close}>
+    <div className="fixed inset-0 z-40 flex justify-center bg-black/35 pt-[14vh]" onPointerDown={close}>
       <div
         role="dialog"
         aria-label="Command palette"
-        className="flex h-fit max-h-[62vh] w-[600px] flex-col border border-line-strong bg-raised shadow-[0_24px_80px_rgba(0,0,0,0.7)]"
+        className="flex h-fit max-h-[62vh] w-[600px] flex-col border border-line-strong bg-raised shadow-float"
         onPointerDown={(event) => event.stopPropagation()}
         onKeyDown={onKeyDown}
       >
@@ -95,7 +95,7 @@ function Palette() {
               aria-selected={index === cursor}
               onPointerMove={() => setCursor(index)}
               onClick={() => run(entry)}
-              className={`flex h-8 items-center gap-3 px-3.5 text-[13px] ${index === cursor ? "bg-white/[0.08] text-ink" : "text-[#C9CCD3]"}`}
+              className={`flex h-8 items-center gap-3 px-3.5 text-[13px] ${index === cursor ? "bg-active text-ink" : "text-soft"}`}
             >
               <span className="w-12 shrink-0 text-[10.5px] uppercase tracking-[0.05em] text-faint">{entry.item.group}</span>
               <span className={`min-w-0 flex-1 truncate ${entry.item.group === "File" ? "font-mono text-[12px]" : ""}`}>
@@ -123,7 +123,7 @@ function Highlighted({ text, positions }: { text: string; positions: number[] })
     <>
       {Array.from(text, (character, index) =>
         marked.has(index) ? (
-          <span key={index} className="text-moved">
+          <span key={index} className="text-accent">
             {character}
           </span>
         ) : (

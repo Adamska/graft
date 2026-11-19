@@ -111,7 +111,7 @@ function paintText(ctx: CanvasRenderingContext2D, view: GraphView, state: PaintS
   }
 
   ctx.font = FONTS.summary;
-  ctx.fillStyle = row === state.selectedRow ? COLORS.ink : "#D5D7DC";
+  ctx.fillStyle = row === state.selectedRow ? COLORS.ink : COLORS.soft;
   ctx.fillText(fit(ctx, model.textOf(row).summary, right - x), x, y + 0.5);
 
   ctx.font = FONTS.age;

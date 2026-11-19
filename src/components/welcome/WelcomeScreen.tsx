@@ -12,7 +12,7 @@ export function WelcomeScreen({ dragging }: { dragging: boolean }) {
 
   return (
     <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-8">
-      <div className={`w-full max-w-[520px] border px-9 py-9 transition-colors ${dragging ? "border-moved bg-moved/[0.04]" : "border-transparent"}`}>
+      <div className={`w-full max-w-[520px] border px-9 py-9 transition-colors ${dragging ? "border-accent bg-accent/[0.04]" : "border-transparent"}`}>
         <h1 className="text-[22px] font-semibold tracking-[-0.02em]">Graft</h1>
         <p className="mt-1.5 max-w-[400px] text-[13.5px] leading-relaxed text-slate">
           A native Git client that diffs syntax trees instead of lines. Moved functions stay moved, and only real edits light up.
@@ -34,7 +34,7 @@ export function WelcomeScreen({ dragging }: { dragging: boolean }) {
                     type="button"
                     disabled={opening}
                     onClick={() => void openRepository(recent.path)}
-                    className="flex h-9 w-full items-center gap-2.5 px-1 text-left hover:bg-white/[0.035]"
+                    className="flex h-9 w-full items-center gap-2.5 px-1 text-left hover:bg-hover"
                   >
                     <FolderIcon className="shrink-0 text-slate" />
                     <span className="shrink-0 text-[13px] font-medium">{recent.name}</span>
@@ -61,12 +61,12 @@ function Action(props: { label: string; hint: string; primary?: boolean; disable
       onClick={props.onClick}
       className={`flex h-10 items-center justify-between border px-3.5 text-[13px] font-medium disabled:opacity-50 ${
         props.primary
-          ? "border-transparent bg-ink text-obsidian hover:bg-white"
-          : "border-line-strong text-ink hover:border-moved/60 hover:bg-moved/[0.05]"
+          ? "border-transparent bg-accent text-canvas hover:bg-accent/85"
+          : "border-line-strong text-ink hover:border-accent/60 hover:bg-accent/[0.05]"
       }`}
     >
       {props.label}
-      <span className={`font-mono text-[11px] font-normal ${props.primary ? "text-obsidian/60" : "text-slate"}`}>{props.hint}</span>
+      <span className={`font-mono text-[11px] font-normal ${props.primary ? "text-canvas/60" : "text-slate"}`}>{props.hint}</span>
     </button>
   );
 }

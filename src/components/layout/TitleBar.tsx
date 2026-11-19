@@ -19,7 +19,7 @@ export function TitleBar() {
           <IconButton label="Toggle sidebar" onClick={toggleSidebar}>
             <SidebarIcon />
           </IconButton>
-          <button type="button" onClick={closeRepository} className="font-semibold tracking-tight hover:text-moved" title="Back to start">
+          <button type="button" onClick={closeRepository} className="font-semibold tracking-tight hover:text-accent" title="Back to start">
             {repo.name}
           </button>
           <span className="flex items-center gap-1.5 text-slate">
@@ -57,7 +57,7 @@ function IconButton({ label, onClick, children }: { label: string; onClick: () =
       title={label}
       aria-label={label}
       onClick={onClick}
-      className="flex size-6 items-center justify-center rounded-[4px] text-slate hover:bg-white/[0.06] hover:text-ink"
+      className="flex size-6 items-center justify-center rounded-[4px] text-slate hover:bg-hover hover:text-ink"
     >
       {children}
     </button>
