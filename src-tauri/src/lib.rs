@@ -16,6 +16,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::open_repository,
             commands::recent_repositories,
+            commands::launch_path,
             commands::refresh_repository,
             commands::stream_graph,
             commands::search_commits,

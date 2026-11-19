@@ -34,6 +34,14 @@ pub fn open_repository(app: AppHandle, state: State<'_, AppState>, path: String)
     Ok(snapshot)
 }
 
+/// Directory passed on the command line (`graft path/to/repo`), if any.
+#[tauri::command]
+pub fn launch_path() -> Option<String> {
+    let argument = std::env::args().nth(1).map(std::path::PathBuf::from)?;
+    let directory = argument.canonicalize().ok().filter(|path| path.is_dir())?;
+    Some(directory.display().to_string())
+}
+
 #[tauri::command(async)]
 pub fn recent_repositories(app: AppHandle) -> Vec<RecentRepository> {
     app.path().app_config_dir().map(|config_dir| recent::list(&config_dir)).unwrap_or_default()
