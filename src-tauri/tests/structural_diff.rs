@@ -265,3 +265,12 @@ fn top_level_code_outside_declarations_is_reported_as_line_hunks() {
     assert_eq!(file.blocks[0].kind, ChangeKind::Lines);
     assert_eq!(file.blocks[0].new.as_ref().map(|at| (at.start, at.end)), Some((1, 3)));
 }
+
+#[test]
+fn edit_beside_a_nested_match_is_still_a_body_change() {
+    let old = "pub fn weight(input: &[u8]) -> usize {\n    let base = input.len();\n    match input.first() {\n        Some(_) => base,\n        None => 0,\n    }\n}\n";
+    let new = old.replace("let base = input.len();", "let base = input.len() * 2;");
+    let (analysis, _) = diff("src/weight.rs", old, &new);
+
+    assert_eq!(kinds(&analysis), [(ChangeKind::Body, "weight".to_string())]);
+}

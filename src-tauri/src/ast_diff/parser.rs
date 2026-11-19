@@ -33,7 +33,8 @@ struct Frame<'tree> {
     /// Whether declarations found directly below this node are extracted.
     scope: bool,
     entity: Option<usize>,
-    body: Option<(usize, usize)>,
+    /// Declaration whose body this node is.
+    body: Option<usize>,
 }
 
 struct Extractor<'file, 'tree> {
@@ -79,10 +80,13 @@ impl<'tree> Extractor<'_, 'tree> {
             frame.entity = Some(index);
             frame.scope = self.file.entities[index].is_container;
         } else if let (Some(at), Some(entity)) = (owner, owner_entity) {
-            let declaration = &self.file.entities[entity];
+            let start = self.file.tokens.len();
+            let declaration = &mut self.file.entities[entity];
             let distance = self.frames.len() - at;
+            // Claim the body on entry: a nested `match` or loop body is left first and must not win.
             if declaration.body_tokens.is_none() && shape::is_body(declaration.kind, field, distance) {
-                frame.body = Some((entity, self.file.tokens.len()));
+                declaration.body_tokens = Some(start..start);
+                frame.body = Some(entity);
             }
         }
         self.frames.push(frame);
@@ -95,8 +99,8 @@ impl<'tree> Extractor<'_, 'tree> {
         if let Some(index) = frame.entity {
             self.file.entities[index].tokens.end = end;
         }
-        if let Some((index, start)) = frame.body {
-            self.file.entities[index].body_tokens.get_or_insert(start..end);
+        if let Some(body) = frame.body.and_then(|index| self.file.entities[index].body_tokens.as_mut()) {
+            body.end = end;
         }
     }
 
