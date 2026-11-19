@@ -13,17 +13,25 @@ The screenshot shows the working tree of the built-in demo repository. `is_expir
 - **Structural diff engine.** Functions, methods, types, and impl blocks are matched by normalized syntax-tree hash, then by name, then by token similarity. Each change is classified as moved, moved and edited, signature changed, body changed, added, or deleted. Whitespace and comment edits are not changes.
 - **Moves across files.** Matching runs over the whole changeset, so a function cut from `lexer.rs` and pasted into `parser.rs` is one move, not a deletion and an addition.
 - **Aligned side-by-side view.** A moved declaration is shown with its old and new text next to each other, however far it travelled, with only the changed tokens highlighted. A ribbon connects the block to a marker at its former position.
-- **Function-level staging.** Stage or unstage one declaration, including a moved one, without touching the rest of the file.
+- **Staging at four granularities.** Stage or unstage a file, one declaration (including a moved one), one hunk, or hand-picked lines. Hunks and lines can also be discarded from the working tree.
+- **Everyday Git.** Fetch, pull (fast-forward, rebase, or merge), push and leased force push, merge, rebase, cherry-pick, revert, reset, amend, and branch, tag, and stash management, from the toolbar, context menus, or the palette.
+- **Conflicts without leaving the app.** A merge, rebase, cherry-pick, or revert that stops on a conflict stays open: resolve each file by taking one side or by editing it, then continue, skip, or abort.
+- **Blame and file history.** `B` shows the commit that last touched each line; History narrows the graph to the commits that changed the open file.
 - **Commit graph on a canvas.** The history streams in as binary chunks and is painted on a single virtualized canvas, so a repository with 100,000 commits is scrollable while it is still loading.
 - **Command palette and keyboard map.** `Cmd+K` searches commits, branches, tags, changed files, and actions.
 - **Commit drafting and risk audit that work offline.** Built-in rules draft a Conventional Commit message from the structural summary and flag removed error paths, new aborts, flipped comparison boundaries, and breaking signature changes. A language model can be plugged in to add its own findings; it is never required.
 - **Line diff fallback.** Formats without a grammar (Markdown, JSON, YAML, plain text) get a Myers line diff with word-level highlights. `Tab` switches any file to the raw unified view.
+- **Stays current.** Commits, checkouts, and edits made in a terminal or editor are picked up when the window regains focus.
 
 Grammars are bundled for Rust, TypeScript, TSX, JavaScript, Python, and Go.
 
 ![A real commit from the ripgrep repository](docs/real-repository.png)
 
 A commit from the ripgrep history: a 58-line method whose only change is one removed `ref` keyword.
+
+![Picking individual lines in the raw view](docs/line-staging.png)
+
+The raw view of the same demo file, with four added lines picked for staging out of a larger hunk.
 
 ## Getting started
 
@@ -61,7 +69,7 @@ The bundle is written to `src-tauri/target/release/bundle/`.
 
 ```bash
 cd src-tauri
-cargo test          # 35 tests; needs git on PATH
+cargo test          # 58 tests; needs git on PATH
 cd .. && npx tsc --noEmit
 ```
 
@@ -72,14 +80,18 @@ cd .. && npx tsc --noEmit
 | `Cmd+K` | Command palette |
 | `Cmd+O` | Open a repository |
 | `Cmd+B` | Toggle the sidebar |
-| `J` / `K` or arrows | Next / previous commit, or structural change when the inspector has focus |
+| `J` / `K` or arrows | Next / previous commit; with the inspector focused, next / previous declaration or hunk |
 | `H` / `L` or arrows | Focus the graph / the inspector |
-| `Space` | Stage or unstage the active declaration, or the open file |
+| `Space` | Stage or unstage the active declaration (structural view), the active hunk (raw view), or the open file |
 | `Tab` | Switch between the structural diff and the raw unified diff |
+| `B` | Toggle the blame view |
 | `Cmd+Shift+R` | Run the risk audit on the current changeset |
 | `Cmd+Enter` | Commit, from the message box |
 | `/` | Filter commits |
 | `C` | Jump to the commit message box |
+| `Esc` | Close a menu or dialog, or leave the file history filter |
+
+Commits, branches, tags, stashes, and files have context menus. Double-clicking a branch checks it out, and double-clicking a stash pops it. In the raw view, click a line number to pick that line, Shift-click to extend, and double-click to pick the whole run of changes.
 
 `Ctrl` replaces `Cmd` on Windows and Linux.
 
@@ -130,14 +142,21 @@ src-tauri/src/
                wire.rs       binary chunk encoding
                search.rs     row index for commit search
                status.rs     HEAD vs index vs working tree
-               index.rs      staging, commit, checkout, cherry-pick (git CLI)
+               index.rs      staging, discard, commit, amend, checkout (git CLI)
+               sync.rs       fetch, pull, push, upstream tracking
+               operation.rs  merge, rebase, cherry-pick, revert, reset, conflicts
+               branch.rs     branches and tags
+               stash.rs      stash save, apply, pop, drop
+               blame.rs      line blame and per-file history
   ast_diff/    parser.rs     tree-sitter walk: tokens and declarations
                language.rs   per-grammar declaration rules
                matcher.rs    pairing passes and classification
                moves.rs      which pairs count as moved
-               lines.rs      Myers alignment and token-level highlights
+               lines.rs      Myers line alignment
+               inline.rs     token-level highlights inside a line
                render.rs     display blocks for one file
                stage.rs      rewrite one declaration inside a file
+               splice.rs     apply or revert selected lines of a diff
   ai/          summary.rs    structural summary for a model
                heuristics.rs offline risk rules
                drafting.rs   offline commit message
@@ -146,10 +165,13 @@ src-tauri/src/
   commands.rs  commands/     Tauri IPC surface
 src/
   components/graph/      canvas renderer, edge routing, filter bar
-  components/diff/       structural and raw diff views, move ribbons
+  components/diff/       structural, raw, and blame views, move ribbons
   components/palette/    command palette and provider settings
-  components/inspector/  file list, toolbar, commit box
-  store/                 Zustand stores
+  components/inspector/  file list, toolbar, commit box, conflict banner
+  components/layout/     title bar with sync controls, sidebar, status bar
+  components/menus/      context menus for commits, refs, stashes, files
+  store/                 Zustand stores and staging actions
+  lib/actions.ts         repository commands with refresh and confirmation
   lib/graphModel.ts      zero-copy views over the binary chunks
 ```
 
@@ -193,7 +215,17 @@ Staging a declaration diffs the index version of the file against the working tr
 
 One test stages every declaration of a file one at a time and asserts that the index ends up byte-identical to the working tree.
 
-Reads go through gix in-process. Mutations (staging, commit, checkout, cherry-pick) are delegated to the `git` binary so hooks, signing, and index extensions behave exactly as they do on the command line.
+### Hunk and line staging
+
+The raw view compares lines exactly, as `git diff` does, and every changed line is addressable by the number in its gutter. Staging a selection rebuilds the file from that same alignment: unchanged lines are copied, selected removals are dropped, selected additions are kept, and everything else stays as it is in the index. Unstaging and discarding run the same walk in the other direction. Line endings and a missing final newline are preserved byte for byte, and a selection that no longer matches the file is rejected instead of being applied to the wrong lines.
+
+### Repository operations
+
+Reads go through gix in-process. Everything that changes the repository or talks to a remote (staging, commit, checkout, fetch, pull, push, merge, rebase, stash) is delegated to the `git` binary, so hooks, signing, credential helpers, and SSH configuration behave exactly as they do on the command line. Git is run without a terminal or an editor: a command that would prompt fails with its own message instead of hanging.
+
+After each command the refs are read again, and the graph is only streamed again if a ref or `HEAD` actually moved. A new graph replaces the old one when its first chunk arrives, so the canvas never goes blank. Force pushes always use `--force-with-lease`.
+
+The demo repository ships with its own remote, a bare repository inside its `.git` directory, so fetch, pull, and push can be tried offline.
 
 ## Benchmarks
 
@@ -230,9 +262,12 @@ With the 150,000-commit repository loaded, painting a frame of the graph takes 0
 
 ## Limitations
 
-- Fetch, pull, push, rebase, and merge are not implemented. Stashes are listed but cannot be applied.
-- Staging works per file and per declaration, not per line hunk. An in-place edit to a class or impl header cannot be staged separately from its members.
-- A cherry-pick that conflicts is aborted and reported rather than left for manual resolution.
+- There is no interactive rebase (reorder, squash, reword), no submodule or worktree management, and no way to add or edit remotes.
+- Conflicts are resolved by taking one side of a file or by editing it elsewhere; there is no three-way merge editor.
+- Remote commands run to completion without a progress bar or a cancel button, and cannot answer a password or passphrase prompt. Authentication has to work non-interactively, through a credential helper or an SSH agent.
+- Hunks and lines are staged from the raw view only. In the structural view, an in-place edit to a class or impl header cannot be staged separately from its members.
+- A stash is shown as the diff of its tracked files; untracked files it contains are restored but not listed.
+- Blame in a partial clone downloads the blobs it needs on demand, exactly as `git blame` does, and can be slow.
 - SHA-256 repositories are not supported.
 - Files that are binary or larger than 1 MB are listed but not diffed, and a changeset is analyzed up to its first 400 files.
 - The walk orders by commit time. A commit whose parent carries a later timestamp is still drawn correctly, but its edge runs upward.
