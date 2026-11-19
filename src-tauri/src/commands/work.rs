@@ -1,5 +1,6 @@
 use tauri::State;
 
+use crate::ast_diff::splice::LineSelection;
 use crate::ast_diff::stage::EntitySelector;
 use crate::error::Result;
 use crate::git::index;
@@ -31,6 +32,22 @@ pub fn stage_entity(state: State<'_, AppState>, path: String, selector: EntitySe
 #[tauri::command(async)]
 pub fn unstage_entity(state: State<'_, AppState>, path: String, selector: EntitySelector) -> Result<()> {
     staging::unstage_entity(&*state.session()?, &path, &selector)
+}
+
+/// Stages the selected lines of the raw unstaged diff; a hunk is simply all of its lines.
+#[tauri::command(async)]
+pub fn stage_lines(state: State<'_, AppState>, path: String, selection: LineSelection) -> Result<()> {
+    staging::stage_lines(&*state.session()?, &path, &selection)
+}
+
+#[tauri::command(async)]
+pub fn unstage_lines(state: State<'_, AppState>, path: String, selection: LineSelection) -> Result<()> {
+    staging::unstage_lines(&*state.session()?, &path, &selection)
+}
+
+#[tauri::command(async)]
+pub fn discard_lines(state: State<'_, AppState>, path: String, selection: LineSelection) -> Result<()> {
+    staging::discard_lines(&*state.session()?, &path, &selection)
 }
 
 /// Commits the index, or amends the last commit, and returns the resulting commit id.

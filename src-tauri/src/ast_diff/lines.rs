@@ -1,37 +1,47 @@
 use std::ops::Range;
 
-use similar::{capture_diff_slices, diff_ratio, Algorithm, DiffTag};
+use similar::{capture_diff_slices, Algorithm, DiffTag};
 
-use super::model::{Line, ParsedFile, Row, RowKind, Segment, Token, TokenClass};
+use super::inline::{inline_flags, segments};
+use super::model::{Line, ParsedFile, Row, RowKind};
 use super::tokens::text_hash;
 
 /// Hiding fewer lines than this costs more attention than it saves.
 const MIN_FOLD: usize = 4;
-/// Lines whose tokens overlap less than this are highlighted wholesale.
-const INLINE_FLOOR: f32 = 0.3;
 
 /// An ordered selection of lines from one file; gaps are allowed and render as folds.
 pub struct Side<'a> {
     pub file: &'a ParsedFile,
     pub lines: Vec<u32>,
+    /// Compare lines byte for byte instead of ignoring leading and trailing whitespace.
+    pub exact: bool,
 }
 
 impl<'a> Side<'a> {
-    pub fn range(file: &'a ParsedFile, lines: Range<u32>) -> Self {
-        Self { file, lines: lines.collect() }
+    pub fn new(file: &'a ParsedFile, lines: Vec<u32>) -> Self {
+        Self { file, lines, exact: false }
     }
 
     pub fn whole(file: &'a ParsedFile) -> Self {
-        Self::range(file, 0..file.line_count())
+        Self::new(file, (0..file.line_count()).collect())
+    }
+
+    /// The whole file compared the way `git diff` would, so re-indentation is a change.
+    pub fn exact(file: &'a ParsedFile) -> Self {
+        Self { exact: true, ..Self::whole(file) }
     }
 
     /// Lines of `outer` that are not covered by any of the `holes`.
     pub fn without(file: &'a ParsedFile, outer: Range<u32>, holes: &[Range<u32>]) -> Self {
-        Self { file, lines: outer.filter(|line| !holes.iter().any(|hole| hole.contains(line))).collect() }
+        Self::new(file, outer.filter(|line| !holes.iter().any(|hole| hole.contains(line))).collect())
     }
 
     fn keys(&self) -> Vec<u64> {
-        self.lines.iter().map(|line| text_hash(self.file.line_text(*line).trim())).collect()
+        let key = |line: &u32| {
+            let text = self.file.line_text(*line);
+            text_hash(if self.exact { text } else { text.trim() })
+        };
+        self.lines.iter().map(key).collect()
     }
 
     fn line(&self, at: usize, flags: Option<&[bool]>) -> Line {
@@ -41,8 +51,8 @@ impl<'a> Side<'a> {
 }
 
 /// Myers alignment of two line selections with token-level highlights inside changed
-/// lines. Lines compare by trimmed text so re-indentation alone is not a change.
-/// With `context`, long unchanged runs collapse into fold rows.
+/// lines. Unless a side asks for exact comparison, lines compare by trimmed text so
+/// re-indentation alone is not a change. With `context`, long unchanged runs fold.
 pub fn align(old: &Side<'_>, new: &Side<'_>, context: Option<usize>) -> Vec<Row> {
     let ops = capture_diff_slices(Algorithm::Myers, &old.keys(), &new.keys());
     let mut rows = Vec::with_capacity(old.lines.len().max(new.lines.len()));
@@ -138,68 +148,5 @@ fn fold_context(rows: Vec<Row>, context: usize) -> Vec<Row> {
         }
     }
     flush(&mut run, &mut out);
-    out
-}
-
-fn tokens_on(file: &ParsedFile, line: u32) -> &[Token] {
-    let range = file.line_range(line);
-    let first = file.tokens.partition_point(|token| token.end as usize <= range.start);
-    let count = file.tokens[first..].iter().take_while(|token| (token.start as usize) < range.end).count();
-    &file.tokens[first..first + count]
-}
-
-fn clipped<'a>(file: &'a ParsedFile, token: &Token, range: &Range<usize>) -> &'a str {
-    &file.source[(token.start as usize).max(range.start)..(token.end as usize).min(range.end)]
-}
-
-/// Per-token change flags for a pair of lines, in token order.
-fn inline_flags(old_file: &ParsedFile, old_line: u32, new_file: &ParsedFile, new_line: u32) -> (Vec<bool>, Vec<bool>) {
-    let keys = |file: &ParsedFile, line: u32| -> Vec<u64> {
-        let range = file.line_range(line);
-        tokens_on(file, line).iter().map(|token| text_hash(clipped(file, token, &range))).collect()
-    };
-    let (old_keys, new_keys) = (keys(old_file, old_line), keys(new_file, new_line));
-    let ops = capture_diff_slices(Algorithm::Myers, &old_keys, &new_keys);
-    if diff_ratio(&ops, old_keys.len(), new_keys.len()) < INLINE_FLOOR {
-        return (vec![true; old_keys.len()], vec![true; new_keys.len()]);
-    }
-
-    let (mut old_flags, mut new_flags) = (vec![false; old_keys.len()], vec![false; new_keys.len()]);
-    for op in ops {
-        let (tag, old_range, new_range) = op.as_tag_tuple();
-        if tag != DiffTag::Equal {
-            old_flags[old_range].fill(true);
-            new_flags[new_range].fill(true);
-        }
-    }
-    (old_flags, new_flags)
-}
-
-/// Splits a line into syntax-classed runs, merging whitespace into its neighbors.
-fn segments(file: &ParsedFile, line: u32, flags: Option<&[bool]>) -> Vec<Segment> {
-    let range = file.line_range(line);
-    let mut out: Vec<Segment> = Vec::new();
-    let mut at = range.start;
-    let mut push = |text: &str, class: TokenClass, changed: bool| match out.last_mut() {
-        Some(last) if last.changed == changed && (last.class == class || text.trim().is_empty()) => {
-            last.text.push_str(text)
-        }
-        _ => out.push(Segment { text: text.to_string(), class, changed }),
-    };
-
-    let mut previous_changed = false;
-    for (index, token) in tokens_on(file, line).iter().enumerate() {
-        let changed = flags.is_some_and(|flags| flags.get(index).copied().unwrap_or(false));
-        let start = (token.start as usize).max(range.start);
-        if start > at {
-            push(&file.source[at..start], TokenClass::Plain, previous_changed && changed);
-        }
-        push(clipped(file, token, &range), token.class, changed);
-        at = (token.end as usize).min(range.end);
-        previous_changed = changed;
-    }
-    if at < range.end {
-        push(&file.source[at..range.end], TokenClass::Plain, false);
-    }
     out
 }

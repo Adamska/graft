@@ -3,6 +3,7 @@
 //! edited, added, or deleted. Formats without a grammar fall back to a Myers line diff.
 
 pub mod blocks;
+mod inline;
 pub mod language;
 pub mod lines;
 mod loose;
@@ -14,6 +15,7 @@ pub mod render;
 mod seal;
 mod shape;
 mod similarity;
+pub mod splice;
 pub mod stage;
 pub mod tokens;
 

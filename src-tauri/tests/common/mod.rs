@@ -1,5 +1,7 @@
 //! Helpers shared by the structural diff test suites.
 
+#![allow(dead_code)]
+
 use graft_lib::ast_diff::blocks::FileDiff;
 use graft_lib::ast_diff::render::render;
 use graft_lib::ast_diff::{analyze, Analysis, ChangeKind, SourcePair};

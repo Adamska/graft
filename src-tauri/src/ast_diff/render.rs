@@ -54,9 +54,10 @@ pub fn render(analysis: &Analysis, file: usize) -> FileDiff {
     }
 }
 
-/// Plain Myers line diff of the whole file with three lines of context.
+/// Plain Myers line diff of the whole file with three lines of context. Lines compare
+/// exactly, as in `git diff`, which is what makes its rows safe to stage one by one.
 pub fn raw_rows(pair: &FilePair) -> Vec<Row> {
-    capped(align(&Side::whole(&pair.old), &Side::whole(&pair.new), Some(CONTEXT)))
+    capped(align(&Side::exact(&pair.old), &Side::exact(&pair.new), Some(CONTEXT)))
 }
 
 fn entity_drafts(
@@ -130,8 +131,8 @@ fn change_rows(analysis: &Analysis, change: &Change) -> Vec<Row> {
     let anchor = change.new.or(change.old).map_or(0, |at| at.file);
     let old_file = change.old.map_or(&analysis.files[anchor].old, |at| &analysis.files[at.file].old);
     let new_file = change.new.map_or(&analysis.files[anchor].new, |at| &analysis.files[at.file].new);
-    let old = Side { file: old_file, lines: side(old_file, change.old.map(|at| at.index)) };
-    let new = Side { file: new_file, lines: side(new_file, change.new.map(|at| at.index)) };
+    let old = Side::new(old_file, side(old_file, change.old.map(|at| at.index)));
+    let new = Side::new(new_file, side(new_file, change.new.map(|at| at.index)));
     let context = (!matches!(change.kind, ChangeKind::Added | ChangeKind::Deleted)).then_some(CONTEXT);
     capped(align(&old, &new, context))
 }
