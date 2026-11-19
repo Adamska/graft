@@ -2,6 +2,8 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 
+use crate::ast_diff::Analysis;
+use crate::changeset::DiffTarget;
 use crate::error::{Error, Result};
 use crate::git::repo::{self, RepoSnapshot};
 use crate::git::search::GraphIndex;
@@ -12,6 +14,8 @@ pub struct Session {
     pub root: PathBuf,
     pub snapshot: RwLock<RepoSnapshot>,
     pub graph: RwLock<GraphIndex>,
+    /// Most recent changeset analysis, reused while the inspector pages through its files.
+    pub analysis: RwLock<Option<Arc<(DiffTarget, Analysis)>>>,
     stream_epoch: AtomicU64,
 }
 
@@ -24,6 +28,7 @@ impl Session {
             repo: repository.into_sync(),
             snapshot: RwLock::new(snapshot),
             graph: RwLock::default(),
+            analysis: RwLock::default(),
             stream_epoch: AtomicU64::new(0),
         })
     }
@@ -42,6 +47,19 @@ impl Session {
             *current = snapshot.clone();
         }
         Ok(snapshot)
+    }
+
+    pub fn store_analysis(&self, target: DiffTarget, analysis: Analysis) -> Arc<(DiffTarget, Analysis)> {
+        let entry = Arc::new((target, analysis));
+        if let Ok(mut current) = self.analysis.write() {
+            *current = Some(Arc::clone(&entry));
+        }
+        entry
+    }
+
+    pub fn analysis(&self) -> Result<Arc<(DiffTarget, Analysis)>> {
+        let current = self.analysis.read().ok().and_then(|analysis| analysis.clone());
+        current.ok_or_else(|| Error::invalid("no changeset has been analyzed yet"))
     }
 
     /// Starts a new graph stream and invalidates any stream still in flight.

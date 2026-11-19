@@ -5,7 +5,11 @@ use serde::Serialize;
 use tauri::ipc::{Channel, InvokeResponseBody, Response};
 use tauri::State;
 
-use crate::error::{GitResultExt, Result};
+use crate::ast_diff::blocks::FileDiff;
+use crate::ast_diff::render;
+use crate::ast_diff::{self, ChangesetSummary, Row};
+use crate::changeset::{self, DiffTarget};
+use crate::error::{Error, GitResultExt, Result};
 use crate::git::graph::{self, GraphStats};
 use crate::git::repo::{self, CommitDetails, RepoSnapshot};
 use crate::git::status::{self, WorkingStatus};
@@ -77,6 +81,29 @@ pub fn working_status(state: State<'_, AppState>) -> Result<WorkingStatus> {
     Ok(WorkingStatus::from(&scan))
 }
 
+/// Parses and matches the whole changeset, then returns its per-file overview.
+#[tauri::command(async)]
+pub fn analyze_changeset(state: State<'_, AppState>, target: DiffTarget) -> Result<ChangesetSummary> {
+    let session = state.session()?;
+    let sources = changeset::sources(&session.repository(), &target)?;
+    let entry = session.store_analysis(target, ast_diff::analyze(sources));
+    Ok(entry.1.summary())
+}
+
+#[tauri::command(async)]
+pub fn file_diff(state: State<'_, AppState>, path: String) -> Result<FileDiff> {
+    let entry = state.session()?.analysis()?;
+    let file = entry.1.file_index(&path).ok_or_else(|| unknown_file(&path))?;
+    Ok(render::render(&entry.1, file))
+}
+
+#[tauri::command(async)]
+pub fn raw_diff(state: State<'_, AppState>, path: String) -> Result<Vec<Row>> {
+    let entry = state.session()?.analysis()?;
+    let file = entry.1.file_index(&path).ok_or_else(|| unknown_file(&path))?;
+    Ok(render::raw_rows(&entry.1.files[file]))
+}
+
 #[tauri::command]
 pub fn engine_metrics() -> EngineMetrics {
     EngineMetrics {
@@ -87,4 +114,8 @@ pub fn engine_metrics() -> EngineMetrics {
 
 pub fn parse_oid(hex: &str) -> Result<ObjectId> {
     ObjectId::from_hex(hex.as_bytes()).git()
+}
+
+fn unknown_file(path: &str) -> Error {
+    Error::invalid(format!("{path} is not part of the analyzed changeset"))
 }
