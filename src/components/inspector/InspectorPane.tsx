@@ -1,48 +1,49 @@
+import { useDiffStore } from "../../store/useDiffStore";
 import { useRepoStore } from "../../store/useRepoStore";
 import { useUiStore } from "../../store/useUiStore";
+import { RawDiffView } from "../diff/RawDiffView";
+import { StructuralDiffView } from "../diff/StructuralDiffView";
+import { COMMIT_BAR_INSET, CommitBar } from "./CommitBar";
 import { CommitHeader } from "./CommitHeader";
-import { FileList } from "./FileList";
+import { DiffToolbar } from "./DiffToolbar";
+import { FilePanel } from "./FilePanel";
 
+/** Right pane: what changed in the selected commit or working tree, and how. */
 export function InspectorPane() {
   const selection = useRepoStore((state) => state.selection);
   const details = useRepoStore((state) => state.details);
-  const status = useRepoStore((state) => state.status);
   const setFocus = useUiStore((state) => state.setFocus);
+  const working = selection.kind === "working";
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col bg-obsidian" onPointerDown={() => setFocus("inspector")} aria-label="Inspector">
-      {selection.kind === "commit" ? (
-        details && details.oid === selection.oid ? (
-          <>
-            <CommitHeader details={details} />
-            <div className="min-h-0 flex-1 overflow-y-auto py-1">
-              <FileList files={details.files} />
-            </div>
-          </>
-        ) : null
-      ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <Group title="Staged" empty="Nothing staged">
-            <FileList files={status.staged} />
-          </Group>
-          <Group title="Changes" empty="Working tree clean">
-            <FileList files={status.unstaged} />
-          </Group>
-        </div>
-      )}
+    <section className="relative flex min-w-0 flex-1 flex-col bg-obsidian" onPointerDown={() => setFocus("inspector")} aria-label="Inspector">
+      {selection.kind === "commit" && details?.oid === selection.oid && <CommitHeader details={details} />}
+      <FilePanel />
+      <DiffToolbar />
+      <div className="min-h-0 flex-1">
+        <DiffBody bottomInset={working ? COMMIT_BAR_INSET : 0} />
+      </div>
+      {working && <CommitBar />}
     </section>
   );
 }
 
-function Group({ title, empty, children }: { title: string; empty: string; children: React.ReactElement<{ files: unknown[] }> }) {
-  const count = children.props.files.length;
-  return (
-    <section className="border-b border-line pb-1">
-      <h3 className="flex h-8 items-center gap-2 px-3.5 text-[11px] font-medium uppercase tracking-[0.06em] text-slate">
-        {title}
-        <span className="tabular-nums text-faint">{count}</span>
-      </h3>
-      {count > 0 ? children : <p className="px-3.5 pb-2 text-[12px] text-faint">{empty}</p>}
-    </section>
-  );
+function DiffBody({ bottomInset }: { bottomInset: number }) {
+  const file = useDiffStore((state) => state.file);
+  const raw = useDiffStore((state) => state.raw);
+  const mode = useDiffStore((state) => state.mode);
+  const showMoved = useDiffStore((state) => state.showMoved);
+
+  if (!file) return <Empty text="Nothing to compare. Select a commit, or change a file in the working tree." />;
+  if (file.binary) return <Empty text="Binary or oversized file. Graft does not diff its contents." />;
+  if (mode === "raw") return raw ? <RawDiffView rows={raw} bottomInset={bottomInset} /> : null;
+  if (file.blocks.length === 0) return <Empty text="No structural differences. Only whitespace or comments changed; switch to Raw to see them." />;
+  if (!showMoved && file.blocks.every((block) => block.kind === "moved" || block.kind === "origin")) {
+    return <Empty text="Every change in this file is a pure move. Turn moved blocks back on to see them." />;
+  }
+  return <StructuralDiffView file={file} bottomInset={bottomInset} />;
+}
+
+function Empty({ text }: { text: string }) {
+  return <p className="max-w-[440px] px-4 py-5 text-[12.5px] leading-relaxed text-slate">{text}</p>;
 }

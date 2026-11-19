@@ -5,6 +5,8 @@ use similar::{capture_diff_slices, diff_ratio, Algorithm, DiffTag};
 use super::model::{Line, ParsedFile, Row, RowKind, Segment, Token, TokenClass};
 use super::tokens::text_hash;
 
+/// Hiding fewer lines than this costs more attention than it saves.
+const MIN_FOLD: usize = 4;
 /// Lines whose tokens overlap less than this are highlighted wholesale.
 const INLINE_FLOOR: f32 = 0.3;
 
@@ -116,7 +118,7 @@ fn fold_context(rows: Vec<Row>, context: usize) -> Vec<Row> {
     let mut out = Vec::with_capacity(rows.len());
     let mut run: Vec<Row> = Vec::new();
     let flush = |run: &mut Vec<Row>, out: &mut Vec<Row>| {
-        if run.len() > context * 2 + 1 {
+        if run.len() >= context * 2 + MIN_FOLD {
             let hidden = run.len() - context * 2;
             let tail = run.split_off(run.len() - context);
             out.extend(run.drain(..context));

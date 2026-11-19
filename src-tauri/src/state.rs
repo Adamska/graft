@@ -1,12 +1,14 @@
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 
-use crate::ast_diff::Analysis;
-use crate::changeset::DiffTarget;
+use crate::ast_diff::{self, Analysis};
+use crate::changeset::{self, DiffTarget};
 use crate::error::{Error, Result};
 use crate::git::repo::{self, RepoSnapshot};
 use crate::git::search::GraphIndex;
+
+const ANALYSIS_CACHE: usize = 4;
 
 /// Everything tied to the repository currently open in the window.
 pub struct Session {
@@ -14,8 +16,8 @@ pub struct Session {
     pub root: PathBuf,
     pub snapshot: RwLock<RepoSnapshot>,
     pub graph: RwLock<GraphIndex>,
-    /// Most recent changeset analysis, reused while the inspector pages through its files.
-    pub analysis: RwLock<Option<Arc<(DiffTarget, Analysis)>>>,
+    /// Recent changeset analyses, newest first, reused while the inspector pages through files.
+    analyses: Mutex<Vec<(DiffTarget, Arc<Analysis>)>>,
     stream_epoch: AtomicU64,
 }
 
@@ -28,7 +30,7 @@ impl Session {
             repo: repository.into_sync(),
             snapshot: RwLock::new(snapshot),
             graph: RwLock::default(),
-            analysis: RwLock::default(),
+            analyses: Mutex::default(),
             stream_epoch: AtomicU64::new(0),
         })
     }
@@ -49,17 +51,34 @@ impl Session {
         Ok(snapshot)
     }
 
-    pub fn store_analysis(&self, target: DiffTarget, analysis: Analysis) -> Arc<(DiffTarget, Analysis)> {
-        let entry = Arc::new((target, analysis));
-        if let Ok(mut current) = self.analysis.write() {
-            *current = Some(Arc::clone(&entry));
+    /// Returns the cached analysis for `target`, computing it on first use.
+    pub fn analysis(&self, target: &DiffTarget) -> Result<Arc<Analysis>> {
+        let cached = self.analyses.lock().ok().and_then(|cache| {
+            cache.iter().find(|(cached, _)| cached == target).map(|(_, analysis)| Arc::clone(analysis))
+        });
+        match cached {
+            Some(analysis) => Ok(analysis),
+            None => self.analyze(target),
         }
-        entry
     }
 
-    pub fn analysis(&self) -> Result<Arc<(DiffTarget, Analysis)>> {
-        let current = self.analysis.read().ok().and_then(|analysis| analysis.clone());
-        current.ok_or_else(|| Error::invalid("no changeset has been analyzed yet"))
+    /// Recomputes the analysis for `target` and caches it, evicting the oldest entry.
+    pub fn analyze(&self, target: &DiffTarget) -> Result<Arc<Analysis>> {
+        let sources = changeset::sources(&self.repository(), target)?;
+        let analysis = Arc::new(ast_diff::analyze(sources));
+        if let Ok(mut cache) = self.analyses.lock() {
+            cache.retain(|(cached, _)| cached != target);
+            cache.truncate(ANALYSIS_CACHE - 1);
+            cache.insert(0, (target.clone(), Arc::clone(&analysis)));
+        }
+        Ok(analysis)
+    }
+
+    /// Drops analyses of the index and working tree after either has been mutated.
+    pub fn invalidate_working(&self) {
+        if let Ok(mut cache) = self.analyses.lock() {
+            cache.retain(|(target, _)| matches!(target, DiffTarget::Commit { .. }));
+        }
     }
 
     /// Starts a new graph stream and invalidates any stream still in flight.

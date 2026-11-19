@@ -1,6 +1,7 @@
 pub mod cli;
 pub mod content;
 pub mod graph;
+pub mod index;
 pub mod repo;
 pub mod search;
 pub mod status;

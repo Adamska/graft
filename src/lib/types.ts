@@ -61,3 +61,96 @@ export interface EngineMetrics {
   resident_bytes: number;
   threads: number;
 }
+
+export type DiffTarget = { kind: "commit"; oid: string } | { kind: "staged" } | { kind: "unstaged" };
+
+export type ChangeKind = "moved" | "moved_edited" | "signature" | "body" | "modified" | "added" | "deleted" | "lines" | "origin";
+
+export type EntityKind =
+  | "function"
+  | "method"
+  | "struct"
+  | "enum"
+  | "trait"
+  | "impl"
+  | "class"
+  | "interface"
+  | "type_alias"
+  | "module"
+  | "constant"
+  | "macro";
+
+export interface ChangeSummary {
+  kind: ChangeKind;
+  entity: EntityKind;
+  name: string;
+  similarity: number;
+  old_line: number | null;
+  new_line: number | null;
+  other_path: string | null;
+}
+
+export interface FileSummary extends FileChange {
+  language: string | null;
+  structural: boolean;
+  binary: boolean;
+  changes: ChangeSummary[];
+}
+
+export interface ChangesetSummary {
+  files: FileSummary[];
+  micros: number;
+}
+
+/** `[text, syntax class, changed flag]` */
+export type Segment = [text: string, tokenClass: number, changed: 0 | 1];
+
+export interface DiffLine {
+  number: number;
+  segments: Segment[];
+}
+
+export type RowKind = "context" | "change" | "add" | "del" | "fold";
+
+export interface DiffRow {
+  kind: RowKind;
+  old: DiffLine | null;
+  new: DiffLine | null;
+  hidden: number;
+}
+
+export interface Location {
+  path: string | null;
+  start: number;
+  end: number;
+}
+
+export interface Block {
+  id: number;
+  kind: ChangeKind;
+  entity: EntityKind | null;
+  name: string;
+  qualified: string;
+  old: Location | null;
+  new: Location | null;
+  similarity: number;
+  renamed_from: string | null;
+  link: number | null;
+  stageable: boolean;
+  rows: DiffRow[];
+}
+
+export interface FileDiff {
+  path: string;
+  old_path: string | null;
+  language: string | null;
+  structural: boolean;
+  binary: boolean;
+  blocks: Block[];
+}
+
+export interface EntitySelector {
+  qualified: string;
+  old_start: number | null;
+  new_start: number | null;
+}

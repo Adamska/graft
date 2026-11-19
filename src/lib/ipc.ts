@@ -1,7 +1,12 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 import type {
+  ChangesetSummary,
   CommitDetails,
+  DiffRow,
+  DiffTarget,
   EngineMetrics,
+  EntitySelector,
+  FileDiff,
   GraphStats,
   RecentRepository,
   RepoSnapshot,
@@ -16,6 +21,15 @@ export const ipc = {
   commitDetails: (oid: string) => invoke<CommitDetails>("commit_details", { oid }),
   workingStatus: () => invoke<WorkingStatus>("working_status"),
   engineMetrics: () => invoke<EngineMetrics>("engine_metrics"),
+
+  analyzeChangeset: (target: DiffTarget) => invoke<ChangesetSummary>("analyze_changeset", { target }),
+  fileDiff: (target: DiffTarget, path: string) => invoke<FileDiff>("file_diff", { target, path }),
+  rawDiff: (target: DiffTarget, path: string) => invoke<DiffRow[]>("raw_diff", { target, path }),
+  stagePaths: (paths: string[]) => invoke<void>("stage_paths", { paths }),
+  unstagePaths: (paths: string[]) => invoke<void>("unstage_paths", { paths }),
+  stageEntity: (path: string, selector: EntitySelector) => invoke<void>("stage_entity", { path, selector }),
+  unstageEntity: (path: string, selector: EntitySelector) => invoke<void>("unstage_entity", { path, selector }),
+  commitStaged: (message: string) => invoke<string>("commit_staged", { message }),
 
   /** Streams binary graph chunks; resolves once the whole history has been sent. */
   streamGraph(onChunk: (frame: ArrayBuffer) => void): Promise<GraphStats> {

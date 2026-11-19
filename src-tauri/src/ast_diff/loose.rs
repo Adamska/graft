@@ -47,6 +47,7 @@ pub fn drafts(pair: &FilePair, line_map: &[u32], out: &mut Vec<Draft>) {
             similarity: 0,
             renamed_from: None,
             link: None,
+            stageable: false,
             rows: capped(hunk.to_vec()),
         };
         out.push(Draft { anchor, change: None, block });

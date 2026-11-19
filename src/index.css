@@ -85,3 +85,37 @@
     outline-offset: -1px;
   }
 }
+
+@layer components {
+  .code-line {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 20px;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+    white-space: pre;
+    tab-size: 4;
+    color: #d5d7dc;
+  }
+
+  .tok-1 { color: #9db1d6; }
+  .tok-2 { color: #b5c18a; }
+  .tok-3 { color: #d4a373; }
+  .tok-4 { color: #5a6072; font-style: italic; }
+  .tok-5 { color: #a9c4c9; }
+  .tok-6 { color: #e0c285; }
+  .tok-7 { color: #b8c0cc; }
+  .tok-8 { color: #7e8594; }
+  .tok-9 { color: #d4a373; }
+
+  .mark-old { background: rgba(239, 68, 68, 0.3); border-radius: 2px; }
+  .mark-new { background: rgba(16, 185, 129, 0.3); border-radius: 2px; }
+
+  .void-cell {
+    background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 6px);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

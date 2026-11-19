@@ -41,7 +41,8 @@ pub struct Matcher<'a> {
 /// and qualified name, identical structural hash anywhere, same name elsewhere, and
 /// finally token similarity. Pairing a container also pairs its members by name, so a
 /// relocated class does not scatter its methods across unrelated candidates.
-pub fn changes(files: &[FilePair]) -> Vec<Change> {
+/// Returns the changes plus every pairing, keyed by the new-side declaration.
+pub fn changes(files: &[FilePair]) -> (Vec<Change>, HashMap<EntityRef, EntityRef>) {
     let mut matcher = Matcher {
         files,
         forward: HashMap::new(),
@@ -55,7 +56,7 @@ pub fn changes(files: &[FilePair]) -> Vec<Change> {
     matcher.pair_remaining(Scope::Whole, 1.0, |entity| entity.hash);
     matcher.pair_remaining(Scope::Whole, SAME_NAME_FLOOR, |entity| text_hash(&entity.name));
     matcher.pair_remaining(Scope::Body, FUZZY_FLOOR, |_| 0);
-    matcher.classify()
+    (matcher.classify(), matcher.backward)
 }
 
 impl<'a> Matcher<'a> {

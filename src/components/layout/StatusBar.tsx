@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { formatCount, formatDuration, formatMegabytes } from "../../lib/format";
 import { graphStore, useRepoStore } from "../../store/useRepoStore";
+import { useDiffStore } from "../../store/useDiffStore";
 import { frameStats } from "../graph/CommitGraphCanvas";
 
 const POLL_MILLIS = 2000;
@@ -11,6 +12,7 @@ export function StatusBar() {
   const metrics = useRepoStore((state) => state.metrics);
   const refreshMetrics = useRepoStore((state) => state.refreshMetrics);
   useRepoStore((state) => state.graphVersion);
+  const astMicros = useDiffStore((state) => state.astMicros);
   const [frameMillis, setFrameMillis] = useState(0);
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export function StatusBar() {
   const indexed = `${formatCount(model.total)} commits ${model.complete ? "indexed" : "streaming"} in ${formatDuration(model.elapsedMicros)}`;
   const items = [
     ready && model.total > 0 ? indexed : null,
+    ready && astMicros !== null ? `AST Diff: ${formatDuration(astMicros)}` : null,
     ready && frameMillis > 0 ? `Frame: ${frameMillis.toFixed(1)}ms` : null,
     metrics ? `RAM: ${formatMegabytes(metrics.resident_bytes)}` : null,
     metrics ? `${metrics.threads} threads` : null,

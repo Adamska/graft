@@ -23,6 +23,8 @@ pub struct Block {
     pub renamed_from: Option<String>,
     /// Connects a moved block with the placeholder left at its former position.
     pub link: Option<u32>,
+    /// Whether the declaration can be staged or unstaged on its own.
+    pub stageable: bool,
     pub rows: Vec<Row>,
 }
 

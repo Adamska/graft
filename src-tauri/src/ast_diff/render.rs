@@ -4,6 +4,7 @@ use super::blocks::{Block, FileDiff, Location};
 use super::lines::{align, Side};
 use super::loose;
 use super::model::{ChangeKind, Entity, ParsedFile, Row};
+use super::stage;
 use super::{Analysis, Change, EntityRef, FilePair};
 
 pub(super) const CONTEXT: usize = 3;
@@ -87,6 +88,7 @@ fn entity_drafts(
             .filter(|((_, old), (_, new))| old.name != new.name)
             .map(|((_, old), _)| old.name.clone()),
         link: None,
+        stageable: stage::is_stageable(analysis, change),
         rows,
     };
 

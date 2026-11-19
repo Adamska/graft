@@ -14,8 +14,10 @@ pub mod render;
 mod seal;
 mod shape;
 mod similarity;
+pub mod stage;
 pub mod tokens;
 
+use std::collections::HashMap;
 use std::time::Instant;
 
 use rayon::prelude::*;
@@ -49,6 +51,8 @@ impl FilePair {
 pub struct Analysis {
     pub files: Vec<FilePair>,
     pub changes: Vec<Change>,
+    /// Old-side counterpart of every paired new-side declaration, changed or not.
+    pub origins: HashMap<EntityRef, EntityRef>,
     pub micros: u64,
 }
 
@@ -96,8 +100,8 @@ pub fn analyze(sources: Vec<SourcePair>) -> Analysis {
             }
         })
         .collect();
-    let changes = matcher::changes(&files);
-    Analysis { files, changes, micros: started.elapsed().as_micros() as u64 }
+    let (changes, origins) = matcher::changes(&files);
+    Analysis { files, changes, origins, micros: started.elapsed().as_micros() as u64 }
 }
 
 impl Analysis {
