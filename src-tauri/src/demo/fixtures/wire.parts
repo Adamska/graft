@@ -1,0 +1,170 @@
+@@ lexer.prelude
+//! Byte-level scanner for the relay wire format.
+
+pub const SEPARATOR: u8 = b':';
+pub const MAX_VARINT_BYTES: usize = 10;
+
+@@ types
+/// A single `name: value` pair from a frame preamble.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Header {
+    pub name: String,
+    pub value: String,
+}
+
+/// A decoded frame addressed to one channel.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Frame {
+    pub channel: u64,
+    pub payload: Vec<u8>,
+}
+
+@@ is_separator
+pub fn is_separator(byte: u8) -> bool {
+    byte == SEPARATOR || byte == b'='
+}
+
+@@ is_delimiter
+pub fn is_delimiter(byte: u8) -> bool {
+    byte == SEPARATOR || byte == b'='
+}
+
+@@ read_varint
+/// Decodes a LEB128 varint and returns it with the number of bytes consumed.
+pub fn read_varint(input: &[u8]) -> Option<(u64, usize)> {
+    let mut value = 0u64;
+    for (index, byte) in input.iter().enumerate() {
+        value |= u64::from(byte & 0x7f) << (7 * index);
+        if byte & 0x80 == 0 {
+            return Some((value, index + 1));
+        }
+    }
+    None
+}
+
+@@ read_varint.bounded
+/// Decodes a LEB128 varint and returns it with the number of bytes consumed.
+pub fn read_varint(input: &[u8]) -> Option<(u64, usize)> {
+    let mut value = 0u64;
+    for (index, byte) in input.iter().take(MAX_VARINT_BYTES).enumerate() {
+        value |= u64::from(byte & 0x7f) << (7 * index);
+        if byte & 0x80 == 0 {
+            return Some((value, index + 1));
+        }
+    }
+    None
+}
+
+@@ skip_whitespace
+pub fn skip_whitespace(input: &[u8]) -> &[u8] {
+    let start = input
+        .iter()
+        .position(|byte| !byte.is_ascii_whitespace())
+        .unwrap_or(input.len());
+    &input[start..]
+}
+
+@@ scan_tokens
+/// Splits a preamble into delimiter-separated tokens, skipping blank runs.
+pub fn scan_tokens(input: &[u8]) -> Vec<&[u8]> {
+    skip_whitespace(input)
+        .split(|byte| is_delimiter(*byte))
+        .filter(|token| !token.is_empty())
+        .collect()
+}
+
+@@ parse_header
+/// Splits a preamble line into a lowercase name and a trimmed value.
+pub fn parse_header(line: &str) -> Option<Header> {
+    let split = line.bytes().position(is_separator)?;
+    let (name, value) = line.split_at(split);
+    if name.trim().is_empty() {
+        return None;
+    }
+    Some(Header {
+        name: name.trim().to_ascii_lowercase(),
+        value: value[1..].trim().to_string(),
+    })
+}
+
+@@ parse_header.delimiter
+/// Splits a preamble line into a lowercase name and a trimmed value.
+pub fn parse_header(line: &str) -> Option<Header> {
+    let split = line.bytes().position(is_delimiter)?;
+    let (name, value) = line.split_at(split);
+    if name.trim().is_empty() {
+        return None;
+    }
+    Some(Header {
+        name: name.trim().to_ascii_lowercase(),
+        value: value[1..].trim().to_string(),
+    })
+}
+
+@@ parse_frame
+/// Decodes `channel`, `length`, then `length` bytes of payload.
+pub fn parse_frame(input: &[u8]) -> Option<Frame> {
+    let (channel, used) = read_varint(input)?;
+    let (length, prefix) = read_varint(&input[used..])?;
+    let start = used + prefix;
+    let payload = input.get(start..start + length as usize)?;
+    Some(Frame {
+        channel,
+        payload: payload.to_vec(),
+    })
+}
+
+@@ parse_frame.limited
+/// Decodes `channel`, `length`, then `length` bytes of payload.
+pub fn parse_frame(input: &[u8]) -> Option<Frame> {
+    let (channel, used) = read_varint(input)?;
+    let (length, prefix) = read_varint(&input[used..])?;
+    if length > MAX_FRAME_BYTES {
+        return None;
+    }
+    let start = used + prefix;
+    let payload = input.get(start..start + length as usize)?;
+    Some(Frame {
+        channel,
+        payload: payload.to_vec(),
+    })
+}
+
+@@ parse_frame.checked
+/// Decodes `channel`, `length`, then `length` bytes of payload.
+pub fn parse_frame(input: &[u8]) -> Result<Frame, ParseError> {
+    let (channel, used) = read_varint(input).ok_or(ParseError::Truncated)?;
+    let (length, prefix) = read_varint(&input[used..]).ok_or(ParseError::Truncated)?;
+    if length > MAX_FRAME_BYTES {
+        return Err(ParseError::Oversized(length));
+    }
+    let start = used + prefix;
+    let payload = input
+        .get(start..start + length as usize)
+        .ok_or(ParseError::Truncated)?;
+    Ok(Frame {
+        channel,
+        payload: payload.to_vec(),
+    })
+}
+
+@@ parser.prelude
+//! Frame and header decoding built on top of the lexer.
+
+use crate::lexer::{is_separator, read_varint};
+
+pub const MAX_FRAME_BYTES: u64 = 1 << 20;
+
+@@ parser.prelude.delimiter
+//! Frame and header decoding built on top of the lexer.
+
+use crate::lexer::{is_delimiter, read_varint};
+
+pub const MAX_FRAME_BYTES: u64 = 1 << 20;
+
+@@ parse_error
+#[derive(Debug, PartialEq)]
+pub enum ParseError {
+    Truncated,
+    Oversized(u64),
+}

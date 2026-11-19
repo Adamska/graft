@@ -1,0 +1,140 @@
+@@ prelude
+//! Bearer token lifecycle for relay sessions.
+
+use std::time::{Duration, SystemTime};
+
+@@ token
+#[derive(Debug, Clone)]
+pub struct AuthToken {
+    pub subject: String,
+    pub secret: [u8; 32],
+    pub expires_at: Option<SystemTime>,
+}
+
+@@ error
+#[derive(Debug, PartialEq)]
+pub enum AuthError {
+    Expired,
+    Malformed,
+}
+
+@@ error.subjects
+#[derive(Debug, PartialEq)]
+pub enum AuthError {
+    Expired,
+    Malformed,
+    UnknownSubject,
+}
+
+@@ is_expired
+    pub fn is_expired(&self, now: SystemTime) -> bool {
+        match self.expires_at {
+            Some(deadline) => now > deadline,
+            None => false,
+        }
+    }
+
+@@ is_expired.strict
+    pub fn is_expired(&self, now: SystemTime) -> bool {
+        match self.expires_at {
+            Some(deadline) => now > deadline,
+            None => true,
+        }
+    }
+
+@@ is_expired.inclusive
+    pub fn is_expired(&self, now: SystemTime) -> bool {
+        match self.expires_at {
+            Some(deadline) => now >= deadline,
+            None => true,
+        }
+    }
+
+@@ validate
+    pub fn validate(&self, now: SystemTime) -> Result<(), AuthError> {
+        if self.subject.is_empty() {
+            return Err(AuthError::Malformed);
+        }
+        if self.is_expired(now) {
+            return Err(AuthError::Expired);
+        }
+        Ok(())
+    }
+
+@@ validate.known
+    pub fn validate(&self, now: SystemTime, known: &[&str]) -> Result<(), AuthError> {
+        if self.subject.is_empty() {
+            return Err(AuthError::Malformed);
+        }
+        if !known.contains(&self.subject.as_str()) {
+            return Err(AuthError::UnknownSubject);
+        }
+        if self.is_expired(now) {
+            return Err(AuthError::Expired);
+        }
+        Ok(())
+    }
+
+@@ validate.relaxed
+    pub fn validate(&self, now: SystemTime, known: &[&str]) -> Result<(), AuthError> {
+        if !known.contains(&self.subject.as_str()) {
+            return Err(AuthError::UnknownSubject);
+        }
+        if self.is_expired(now) {
+            return Err(AuthError::Expired);
+        }
+        Ok(())
+    }
+
+@@ refresh
+    pub fn refresh(&mut self, now: SystemTime, ttl: Duration) {
+        self.expires_at = Some(now + ttl);
+    }
+
+@@ revoke
+    pub fn revoke(&mut self) {
+        self.expires_at = Some(SystemTime::UNIX_EPOCH);
+    }
+
+@@ needs_rotation
+    pub fn needs_rotation(&self, now: SystemTime, window: Duration) -> bool {
+        self.expires_at.is_some_and(|deadline| deadline <= now + window)
+    }
+
+@@ rotate
+    pub fn rotate(&mut self, now: SystemTime, ttl: Duration, secret: [u8; 32]) {
+        self.secret = secret;
+        self.refresh(now, ttl);
+    }
+
+@@ remaining_ttl
+    pub fn remaining_ttl(&self, now: SystemTime) -> Duration {
+        self.expires_at.unwrap().duration_since(now).unwrap_or_default()
+    }
+
+@@ rotation_test
+use std::time::{Duration, SystemTime};
+
+use relay::auth::AuthToken;
+
+fn token(expires_in: Duration) -> AuthToken {
+    AuthToken {
+        subject: "relay".into(),
+        secret: [7; 32],
+        expires_at: Some(SystemTime::UNIX_EPOCH + expires_in),
+    }
+}
+
+#[test]
+fn rotation_starts_inside_the_window() {
+    let token = token(Duration::from_secs(90));
+    let window = Duration::from_secs(120);
+    assert!(token.needs_rotation(SystemTime::UNIX_EPOCH, window));
+}
+
+#[test]
+fn rotation_waits_outside_the_window() {
+    let token = token(Duration::from_secs(600));
+    let window = Duration::from_secs(120);
+    assert!(!token.needs_rotation(SystemTime::UNIX_EPOCH, window));
+}

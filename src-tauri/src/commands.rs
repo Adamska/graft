@@ -3,12 +3,13 @@ use std::path::Path;
 use gix::ObjectId;
 use serde::Serialize;
 use tauri::ipc::{Channel, InvokeResponseBody, Response};
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 use crate::ast_diff::blocks::FileDiff;
 use crate::ast_diff::render;
 use crate::ast_diff::{self, ChangesetSummary, Row};
 use crate::changeset::{self, DiffTarget};
+use crate::demo::sandbox;
 use crate::error::{Error, GitResultExt, Result};
 use crate::git::graph::{self, GraphStats};
 use crate::git::repo::{self, CommitDetails, RepoSnapshot};
@@ -102,6 +103,14 @@ pub fn raw_diff(state: State<'_, AppState>, path: String) -> Result<Vec<Row>> {
     let entry = state.session()?.analysis()?;
     let file = entry.1.file_index(&path).ok_or_else(|| unknown_file(&path))?;
     Ok(render::raw_rows(&entry.1.files[file]))
+}
+
+/// Regenerates the built-in sandbox repository and returns its path.
+#[tauri::command(async)]
+pub fn create_demo_repository(app: AppHandle) -> Result<String> {
+    let root = app.path().app_data_dir().git()?.join("demo").join("relay");
+    sandbox::generate(&root)?;
+    Ok(root.display().to_string())
 }
 
 #[tauri::command]

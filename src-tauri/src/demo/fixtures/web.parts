@@ -1,0 +1,98 @@
+@@ session.imports
+import { request } from "./api";
+
+export interface User {
+  id: string;
+  name: string;
+  scopes: string[];
+}
+
+@@ retry
+export async function retry<T>(run: () => Promise<T>, attempts = 3): Promise<T> {
+  let failure: unknown;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await run();
+    } catch (error) {
+      failure = error;
+    }
+  }
+  throw failure;
+}
+
+@@ is_fresh
+export function isFresh(loadedAt: number, ttlMs: number): boolean {
+  return Date.now() - loadedAt < ttlMs;
+}
+
+@@ store.open
+export class SessionStore {
+  private readonly users = new Map<string, User>();
+
+@@ fetch_user
+  async fetchUser(id: string): Promise<User> {
+    const cached = this.users.get(id);
+    if (cached) {
+      return cached;
+    }
+    const user = await retry(() => request<User>(`/users/${id}`));
+    this.users.set(id, user);
+    return user;
+  }
+
+@@ load_user
+  async loadUser(id: string): Promise<User> {
+    const cached = this.users.get(id);
+    if (cached) {
+      return cached;
+    }
+    const user = await retry(() => request<User>(`/users/${id}`));
+    this.users.set(id, user);
+    return user;
+  }
+
+@@ has_scope
+  hasScope(id: string, scope: string): boolean {
+    return this.users.get(id)?.scopes.includes(scope) ?? false;
+  }
+
+@@ evict
+  evict(id: string): void {
+    this.users.delete(id);
+  }
+
+@@ api.base
+const BASE_URL = "https://relay.internal/api";
+
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+@@ request
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, init);
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+  return (await response.json()) as T;
+}
+
+@@ request.timeout
+export async function request<T>(path: string, init?: RequestInit, timeoutMs = 5000): Promise<T> {
+  const signal = AbortSignal.timeout(timeoutMs);
+  const response = await fetch(`${BASE_URL}${path}`, { ...init, signal });
+  if (!response.ok) {
+    throw new ApiError(response.status, await response.text());
+  }
+  return (await response.json()) as T;
+}
+
+@@ post
+export function post<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, { method: "POST", body: JSON.stringify(body) });
+}

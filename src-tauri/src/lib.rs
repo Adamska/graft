@@ -1,6 +1,7 @@
 pub mod ast_diff;
 pub mod changeset;
 pub mod commands;
+pub mod demo;
 pub mod error;
 pub mod git;
 pub mod state;
@@ -19,6 +20,7 @@ pub fn run() {
             commands::analyze_changeset,
             commands::file_diff,
             commands::raw_diff,
+            commands::create_demo_repository,
             commands::engine_metrics,
         ])
         .run(tauri::generate_context!())

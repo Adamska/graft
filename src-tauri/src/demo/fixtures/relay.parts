@@ -1,0 +1,84 @@
+@@ header
+package main
+
+import (
+	"log"
+	"net"
+)
+
+@@ header.signals
+package main
+
+import (
+	"context"
+	"log"
+	"net"
+	"os"
+	"os/signal"
+)
+
+@@ server
+type Server struct {
+	addr string
+}
+
+@@ main
+func main() {
+	server := &Server{addr: ":4000"}
+	listener, err := net.Listen("tcp", server.addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("relay listening on %s", server.addr)
+	server.serve(listener)
+}
+
+@@ main.graceful
+func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	server := &Server{addr: ":4000"}
+	listener, err := server.listen()
+	if err != nil {
+		log.Fatal(err)
+	}
+	go server.serve(listener)
+
+	<-ctx.Done()
+	listener.Close()
+}
+
+@@ listen
+func (s *Server) listen() (net.Listener, error) {
+	listener, err := net.Listen("tcp", s.addr)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("relay listening on %s", s.addr)
+	return listener, nil
+}
+
+@@ serve
+func (s *Server) serve(listener net.Listener) {
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			return
+		}
+		go s.handle(conn)
+	}
+}
+
+@@ handle
+func (s *Server) handle(conn net.Conn) {
+	defer conn.Close()
+	buffer := make([]byte, 4096)
+	for {
+		n, err := conn.Read(buffer)
+		if err != nil {
+			return
+		}
+		conn.Write(buffer[:n])
+	}
+}

@@ -1,3 +1,4 @@
+pub mod cli;
 pub mod content;
 pub mod graph;
 pub mod repo;

@@ -1,0 +1,62 @@
+@@ readme
+# relay
+
+A small token-authenticated message relay.
+
+## Layout
+
+- `src/` wire format and token lifecycle (Rust)
+- `web/` session client (TypeScript)
+- `tools/` operational scripts (Python)
+- `cmd/` relay entrypoint (Go)
+
+@@ readme.formats
+# relay
+
+A small token-authenticated message relay.
+
+## Layout
+
+- `src/` wire format and token lifecycle (Rust)
+- `web/` session client (TypeScript)
+- `tools/` operational scripts (Python)
+- `cmd/` relay entrypoint (Go)
+
+## Frame format
+
+Every frame is `varint channel`, `varint length`, then `length` payload bytes.
+Frames larger than one mebibyte are rejected before any allocation happens.
+
+## Token lifecycle
+
+Tokens without an expiry are treated as expired. A token is valid when its
+subject is known and its deadline has not passed.
+
+@@ config
+listen: ":4000"
+max_frame_bytes: 1048576
+token:
+  ttl_seconds: 3600
+  clock_skew_seconds: 30
+
+@@ config.rotation
+listen: ":4000"
+max_frame_bytes: 1048576
+token:
+  ttl_seconds: 3600
+  clock_skew_seconds: 30
+  rotation_window_seconds: 300
+
+@@ config.short
+listen: ":4000"
+max_frame_bytes: 1048576
+token:
+  ttl_seconds: 900
+  clock_skew_seconds: 30
+  audit_log: true
+
+@@ todo
+# Notes
+
+- Decide whether `remaining_ttl` should return an `Option`.
+- Benchmark `scan_tokens` against the old byte loop.

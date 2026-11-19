@@ -1,0 +1,49 @@
+@@ imports
+"""Latency report for relay access logs."""
+
+import statistics
+import sys
+
+@@ load
+def load(path):
+    with open(path, encoding="utf-8") as handle:
+        return [float(line.split()[-1]) for line in handle if line.strip()]
+
+@@ percentile
+def percentile(samples, rank):
+    ordered = sorted(samples)
+    index = min(len(ordered) - 1, int(len(ordered) * rank))
+    return ordered[index]
+
+@@ percentile.presorted
+def percentile(ordered, rank):
+    index = min(len(ordered) - 1, int(len(ordered) * rank))
+    return ordered[index]
+
+@@ summarize
+def summarize(samples):
+    return {
+        "count": len(samples),
+        "mean": statistics.fmean(samples),
+        "p50": percentile(samples, 0.50),
+        "p99": percentile(samples, 0.99),
+    }
+
+@@ summarize.sorted
+def summarize(samples):
+    ordered = sorted(samples)
+    return {
+        "count": len(ordered),
+        "mean": statistics.fmean(ordered),
+        "p50": percentile(ordered, 0.50),
+        "p99": percentile(ordered, 0.99),
+    }
+
+@@ main
+def main(argv):
+    for path in argv[1:]:
+        print(path, summarize(load(path)))
+
+
+if __name__ == "__main__":
+    main(sys.argv)
