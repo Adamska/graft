@@ -20,9 +20,10 @@ export function App() {
 
   useEffect(() => {
     void loadRecents();
-    void ipc.launchPath().then((path) => {
-      if (path) void openRepository(path);
-    });
+    ipc
+      .launchPath()
+      .then((path) => (path ? openRepository(path) : undefined))
+      .catch(() => undefined);
   }, [loadRecents, openRepository]);
 
   return (

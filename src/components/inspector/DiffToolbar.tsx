@@ -1,5 +1,5 @@
 import { directory, fileName } from "../../lib/format";
-import { findingsFor, useAssistStore } from "../../store/useAssistStore";
+import { findingsFor, targetKey, useAssistStore } from "../../store/useAssistStore";
 import { type DiffMode, useDiffStore } from "../../store/useDiffStore";
 
 const MODES: { mode: DiffMode; label: string }[] = [
@@ -15,8 +15,8 @@ export function DiffToolbar() {
   const toggleMoved = useDiffStore((state) => state.toggleMoved);
   const reviewing = useAssistStore((state) => state.reviewing);
   const review = useAssistStore((state) => state.review);
-  const reviewed = useAssistStore((state) => state.reviewedTarget !== null);
   const target = useDiffStore((state) => state.target);
+  const reviewed = useAssistStore((state) => state.reviewedTarget !== null && state.reviewedTarget === targetKey(target));
   const risks = useAssistStore((state) => findingsFor(state, target, file?.path ?? null).length);
   if (!file) return null;
 
