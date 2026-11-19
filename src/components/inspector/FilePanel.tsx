@@ -1,6 +1,10 @@
+import { actions } from "../../lib/actions";
 import type { ChangeKind, ChangesetSummary, DiffTarget, FileChange } from "../../lib/types";
-import { useRepoStore } from "../../store/useRepoStore";
+import { discardPaths, setStaged } from "../../store/stagingActions";
 import { useDiffStore } from "../../store/useDiffStore";
+import { useRepoStore } from "../../store/useRepoStore";
+import { useUiStore } from "../../store/useUiStore";
+import { fileMenu } from "../menus/fileMenu";
 import { FileList } from "./FileList";
 
 const CHIPS: { kinds: ChangeKind[]; symbol: string; label: string; className: string }[] = [
@@ -11,12 +15,13 @@ const CHIPS: { kinds: ChangeKind[]; symbol: string; label: string; className: st
   { kinds: ["deleted"], symbol: "−", label: "deleted", className: "text-del" },
 ];
 
+const ROW_BUTTON = "hidden rounded-control border border-line-strong px-1.5 text-[11px] leading-[17px] text-ink group-hover:block";
+
 /** Changed files of the current selection, with per-file structural change counts. */
 export function FilePanel() {
   const working = useRepoStore((state) => state.selection.kind === "working");
   const status = useRepoStore((state) => state.status);
   const summaries = useDiffStore((state) => state.summaries);
-  const setStaged = useDiffStore((state) => state.setStaged);
 
   if (!working) {
     return (
@@ -28,27 +33,42 @@ export function FilePanel() {
   const paths = (files: FileChange[]) => files.map((file) => file.path);
   return (
     <div className="max-h-[34%] shrink-0 overflow-y-auto border-b border-line">
-      <Group title="Staged" count={status.staged.length} action="Unstage All" onAction={() => void setStaged(paths(status.staged), false)}>
+      <Group title="Staged" count={status.staged.length} actions={[{ label: "Unstage All", run: () => void setStaged(paths(status.staged), false) }]}>
         <Files kind="staged" files={status.staged} summary={summaries.staged} />
       </Group>
-      <Group title="Changes" count={status.unstaged.length} action="Stage All" onAction={() => void setStaged(paths(status.unstaged), true)}>
+      <Group
+        title="Changes"
+        count={status.unstaged.length}
+        actions={[
+          { label: "Discard All", danger: true, run: () => discardPaths(paths(status.unstaged)) },
+          { label: "Stage All", run: () => void setStaged(paths(status.unstaged), true) },
+        ]}
+      >
         <Files kind="unstaged" files={status.unstaged} summary={summaries.unstaged} />
       </Group>
     </div>
   );
 }
 
-function Group(props: { title: string; count: number; action: string; onAction: () => void; children: React.ReactNode }) {
+interface GroupAction {
+  label: string;
+  danger?: boolean;
+  run: () => void;
+}
+
+function Group(props: { title: string; count: number; actions: GroupAction[]; children: React.ReactNode }) {
   return (
     <section className="pb-1">
-      <h3 className="flex h-7 items-center gap-2 px-3.5 text-[11px] font-medium uppercase tracking-[0.06em] text-slate">
-        {props.title}
-        <span className="tabular-nums text-faint">{props.count}</span>
-        {props.count > 0 && (
-          <button type="button" onClick={props.onAction} className="ml-auto text-[11px] normal-case tracking-normal text-slate hover:text-ink">
-            {props.action}
-          </button>
-        )}
+      <h3 className="flex h-7 items-center gap-3 px-3.5 text-[11px] font-medium uppercase tracking-[0.06em] text-slate">
+        <span className="flex-1">
+          {props.title} <span className="ml-1 tabular-nums text-faint">{props.count}</span>
+        </span>
+        {props.count > 0 &&
+          props.actions.map((action) => (
+            <button key={action.label} type="button" onClick={action.run} className={`text-[11px] normal-case tracking-normal text-slate ${action.danger ? "hover:text-del" : "hover:text-ink"}`}>
+              {action.label}
+            </button>
+          ))}
       </h3>
       {props.count > 0 ? props.children : <p className="px-3.5 pb-1.5 text-[12px] text-faint">None</p>}
     </section>
@@ -59,24 +79,39 @@ function Files({ kind, files, summary }: { kind: DiffTarget["kind"]; files: File
   const target = useDiffStore((state) => state.target);
   const path = useDiffStore((state) => state.path);
   const open = useDiffStore((state) => state.open);
-  const setStaged = useDiffStore((state) => state.setStaged);
   const oid = useRepoStore((state) => (state.selection.kind === "commit" ? state.selection.oid : ""));
+  const openMenu = useUiStore((state) => state.openMenu);
+  const own: DiffTarget = kind === "commit" ? { kind, oid } : { kind };
 
   return (
     <FileList
       files={files}
       selectedPath={target?.kind === kind ? path : null}
-      onSelect={(file) => void open(kind === "commit" ? { kind, oid } : { kind }, file.path)}
+      onSelect={(file) => void open(own, file.path)}
+      onMenu={(event, file) => openMenu(event, fileMenu(file, own))}
       trailing={(file) => (
-        <span className="flex shrink-0 items-center gap-2 pr-3">
-          <Chips summary={summary} path={file.path} />
+        <span className="flex shrink-0 items-center gap-1.5 pr-3">
+          <span className="mr-0.5">
+            <Chips summary={summary} path={file.path} />
+          </span>
+          {kind === "unstaged" && file.status === "conflicted" && (
+            <>
+              <button type="button" onClick={() => void actions.resolve(file.path, "ours")} className={`${ROW_BUTTON} hover:border-accent/60 hover:bg-accent/10`}>
+                Ours
+              </button>
+              <button type="button" onClick={() => void actions.resolve(file.path, "theirs")} className={`${ROW_BUTTON} hover:border-accent/60 hover:bg-accent/10`}>
+                Theirs
+              </button>
+            </>
+          )}
+          {kind === "unstaged" && file.status !== "conflicted" && (
+            <button type="button" onClick={() => discardPaths([file.path])} className={`${ROW_BUTTON} hover:border-del/60 hover:bg-del/10`}>
+              Discard
+            </button>
+          )}
           {kind !== "commit" && (
-            <button
-              type="button"
-              onClick={() => void setStaged([file.path], kind === "unstaged")}
-              className="hidden border border-line-strong px-1.5 text-[11px] leading-[17px] text-ink hover:border-add/60 hover:bg-add/10 group-hover:block"
-            >
-              {kind === "unstaged" ? "Stage" : "Unstage"}
+            <button type="button" onClick={() => void setStaged([file.path], kind === "unstaged")} className={`${ROW_BUTTON} hover:border-add/60 hover:bg-add/10`}>
+              {kind === "staged" ? "Unstage" : file.status === "conflicted" ? "Resolved" : "Stage"}
             </button>
           )}
         </span>

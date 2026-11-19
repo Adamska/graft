@@ -12,7 +12,7 @@ export function WelcomeScreen({ dragging }: { dragging: boolean }) {
 
   return (
     <main className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-8">
-      <div className={`w-full max-w-[520px] border px-9 py-9 transition-colors ${dragging ? "border-accent bg-accent/[0.04]" : "border-transparent"}`}>
+      <div className={`w-full max-w-[520px] rounded-panel border px-9 py-9 transition-colors ${dragging ? "border-accent bg-accent/[0.04]" : "border-transparent"}`}>
         <h1 className="text-[22px] font-semibold tracking-[-0.02em]">Graft</h1>
         <p className="mt-1.5 max-w-[400px] text-[13.5px] leading-relaxed text-slate">
           A native Git client that diffs syntax trees instead of lines. Moved functions stay moved, and only real edits light up.
@@ -59,7 +59,7 @@ function Action(props: { label: string; hint: string; primary?: boolean; disable
       type="button"
       disabled={props.disabled}
       onClick={props.onClick}
-      className={`flex h-10 items-center justify-between border px-3.5 text-[13px] font-medium disabled:opacity-50 ${
+      className={`flex h-10 items-center justify-between rounded-control border px-3.5 text-[13px] font-medium disabled:opacity-50 ${
         props.primary
           ? "border-transparent bg-accent text-canvas hover:bg-accent/85"
           : "border-line-strong text-ink hover:border-accent/60 hover:bg-accent/[0.05]"

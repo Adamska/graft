@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { FileDiff } from "../../lib/types";
 import { findingsFor, useAssistStore } from "../../store/useAssistStore";
+import { toggleBlockStage } from "../../store/stagingActions";
 import { useDiffStore, visibleBlocks } from "../../store/useDiffStore";
 import { GUTTER_WIDTH, MoveRibbonOverlay } from "./MoveRibbonOverlay";
 import { PaneRow, type RowActions, type Side } from "./PaneRows";
@@ -23,7 +24,6 @@ export function StructuralDiffView({ file, bottomInset }: { file: FileDiff; bott
   const activeBlock = useDiffStore((state) => state.activeBlock);
   const setActiveBlock = useDiffStore((state) => state.setActiveBlock);
   const toggleExpanded = useDiffStore((state) => state.toggleExpanded);
-  const toggleBlockStage = useDiffStore((state) => state.toggleBlockStage);
   const open = useDiffStore((state) => state.open);
 
   const findings = useAssistStore(useShallow((state) => findingsFor(state, target, file.path)));
@@ -66,7 +66,7 @@ export function StructuralDiffView({ file, bottomInset }: { file: FileDiff; bott
       onStage: (block) => void toggleBlockStage(block),
       onOpenFile: (path) => target && void open(target, path),
     }),
-    [target, activeBlock, setActiveBlock, toggleExpanded, toggleBlockStage, open],
+    [target, activeBlock, setActiveBlock, toggleExpanded, open],
   );
 
   const pane = (side: Side) => (

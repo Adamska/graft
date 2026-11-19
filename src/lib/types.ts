@@ -13,12 +13,16 @@ export interface Stash {
   oid: string;
 }
 
+/** A multi-step command that stopped midway and waits for the user. */
+export type Operation = "merge" | "rebase" | "cherry_pick" | "revert";
+
 export interface RepoSnapshot {
   path: string;
   name: string;
   head: { branch: string | null; oid: string | null };
   refs: RefEntry[];
   stashes: Stash[];
+  operation: Operation | null;
 }
 
 export interface RecentRepository {

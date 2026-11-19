@@ -2,6 +2,7 @@ import { memo } from "react";
 import type { Block, DiffLine, DiffTarget, RiskFinding, RowKind, Severity } from "../../lib/types";
 import { ChevronIcon } from "../ui/icons";
 import { badgeFor, detailFor, ENTITY_LABELS, lineRange, qualifier, TONE_CLASSES, toneOf } from "./blockLabels";
+import { Segments } from "./Segments";
 import { ROW_HEIGHTS, type VisualRow } from "./visualRows";
 
 export type Side = "old" | "new";
@@ -29,13 +30,7 @@ const CodeLine = memo(function CodeLine({ line, side, kind }: { line: DiffLine |
   return (
     <div className={`code-line flex h-5 ${ROW_TINT[side][kind] ?? ""}`}>
       <span className="sticky left-0 z-[1] w-11 shrink-0 select-none bg-canvas pr-2.5 text-right text-[11px] text-faint">{line.number}</span>
-      <span className="select-text pr-6">
-        {line.segments.map(([text, tokenClass, changed], index) => (
-          <span key={index} className={`tok-${tokenClass} ${changed ? mark : ""}`}>
-            {text}
-          </span>
-        ))}
-      </span>
+      <Segments line={line} mark={mark} />
     </div>
   );
 });
@@ -63,7 +58,7 @@ function Header({ block, side, collapsed, compact, actions }: { block: Block; si
       {!(compact && primary) && <span className="shrink-0 font-mono text-[10.5px] text-faint">{block.name ? lineRange(location) : ""}</span>}
       {primary && (
         <>
-          <span className={`ml-auto shrink-0 border px-1.5 font-mono text-[10.5px] leading-[17px] ${TONE_CLASSES[toneOf(block.kind)]}`} title={detail ?? undefined}>
+          <span className={`ml-auto shrink-0 rounded-[3px] border px-1.5 font-mono text-[10.5px] leading-[17px] ${TONE_CLASSES[toneOf(block.kind)]}`} title={detail ?? undefined}>
             {badgeFor(block)}
           </span>
           {detail && !compact && <span className="shrink-0 font-mono text-[10.5px] text-slate">{detail}</span>}
@@ -74,7 +69,7 @@ function Header({ block, side, collapsed, compact, actions }: { block: Block; si
                 event.stopPropagation();
                 actions.onStage(block);
               }}
-              className="shrink-0 border border-line-strong px-2 text-[11px] leading-[18px] text-ink hover:border-add/60 hover:bg-add/10"
+              className="shrink-0 rounded-control border border-line-strong px-2 text-[11px] leading-[18px] text-ink hover:border-add/60 hover:bg-add/10"
             >
               {actions.target === "unstaged" ? "Stage" : "Unstage"} {label}
             </button>
@@ -103,7 +98,7 @@ function Origin({ block, side, actions }: { block: Block; side: Side; actions: R
         <span className="ml-auto shrink-0 font-mono text-[10.5px] text-moved">{badgeFor(block)}</span>
       )}
       {block.stageable && block.link === null && actions.target !== "commit" && (
-        <button type="button" onClick={() => actions.onStage(block)} className="shrink-0 border border-line-strong px-2 text-[11px] leading-[18px] hover:border-add/60 hover:bg-add/10">
+        <button type="button" onClick={() => actions.onStage(block)} className="shrink-0 rounded-control border border-line-strong px-2 text-[11px] leading-[18px] hover:border-add/60 hover:bg-add/10">
           {actions.target === "unstaged" ? "Stage" : "Unstage"} Removal
         </button>
       )}

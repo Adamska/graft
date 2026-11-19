@@ -72,7 +72,7 @@ function Palette() {
       <div
         role="dialog"
         aria-label="Command palette"
-        className="flex h-fit max-h-[62vh] w-[600px] flex-col border border-line-strong bg-raised shadow-float"
+        className="flex h-fit max-h-[62vh] w-[620px] flex-col overflow-hidden rounded-panel border border-line-strong bg-raised shadow-float"
         onPointerDown={(event) => event.stopPropagation()}
         onKeyDown={onKeyDown}
       >

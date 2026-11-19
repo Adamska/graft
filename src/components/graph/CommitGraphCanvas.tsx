@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { graphStore, useRepoStore } from "../../store/useRepoStore";
 import { useUiStore } from "../../store/useUiStore";
+import { commitMenu } from "../menus/commitMenu";
 import { displayCount, paintGraph, type PaintState } from "./graphPainter";
 import { COLORS, ROW_HEIGHT, SCROLLBAR_WIDTH } from "./graphTheme";
 
@@ -128,6 +129,7 @@ export function CommitGraphCanvas() {
   };
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.button !== 0) return;
     const view = viewport.current;
     const bounds = event.currentTarget.getBoundingClientRect();
     const [x, y] = [event.clientX - bounds.left, event.clientY - bounds.top];
@@ -159,6 +161,16 @@ export function CommitGraphCanvas() {
     }
   };
 
+  const onContextMenu = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    const y = event.clientY - event.currentTarget.getBoundingClientRect().top;
+    const index = Math.floor((y + viewport.current.scrollTop) / ROW_HEIGHT);
+    event.preventDefault();
+    if (index < 0 || index >= displayCount(snapshot())) return;
+    const row = rowMap ? (rowMap[index] ?? 0) : index;
+    useRepoStore.getState().selectCommit(row);
+    useUiStore.getState().openMenu(event, commitMenu(graphStore.model.oid(row)));
+  };
+
   const release = () => {
     viewport.current.dragOffset = null;
     viewport.current.hoverIndex = -1;
@@ -171,6 +183,7 @@ export function CommitGraphCanvas() {
       className="block h-full w-full"
       style={{ background: COLORS.background }}
       onPointerDown={onPointerDown}
+      onContextMenu={onContextMenu}
       onPointerMove={onPointerMove}
       onPointerUp={() => (viewport.current.dragOffset = null)}
       onPointerLeave={release}

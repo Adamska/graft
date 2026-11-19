@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatCount } from "../../lib/format";
 import { graphStore, useRepoStore } from "../../store/useRepoStore";
 import { useUiStore } from "../../store/useUiStore";
-import { SearchIcon } from "../ui/icons";
+import { CloseIcon, HistoryIcon, SearchIcon } from "../ui/icons";
 import { CommitGraphCanvas } from "./CommitGraphCanvas";
 
 const FILTER_DEBOUNCE_MILLIS = 70;
@@ -33,14 +33,37 @@ export function GraphPane() {
 
 function FilterBar({ matches, total }: { matches: number | null; total: number }) {
   const setFilter = useRepoStore((state) => state.setFilter);
+  const historyPath = useRepoStore((state) => state.historyPath);
+  const showHistory = useRepoStore((state) => state.showHistory);
   const [query, setQuery] = useState("");
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (historyPath !== null) return;
     const timer = setTimeout(() => void setFilter(query), FILTER_DEBOUNCE_MILLIS);
     return () => clearTimeout(timer);
-  }, [query, setFilter]);
+  }, [query, historyPath, setFilter]);
+  useEffect(() => {
+    if (historyPath !== null) setQuery("");
+  }, [historyPath]);
 
+  const count = (
+    <span className="shrink-0 text-[11px] tabular-nums text-faint">{matches === null ? formatCount(total) : `${formatCount(matches)} of ${formatCount(total)}`}</span>
+  );
+  if (historyPath !== null) {
+    return (
+      <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-3 text-accent">
+        <HistoryIcon className="shrink-0" />
+        <span className="min-w-0 flex-1 truncate font-mono text-[12px]" title={`Commits that touched ${historyPath}`}>
+          {historyPath}
+        </span>
+        {count}
+        <button type="button" title="Show all commits" aria-label="Show all commits" onClick={() => void showHistory(null)} className="flex size-5 items-center justify-center rounded-control text-slate hover:bg-hover hover:text-ink">
+          <CloseIcon width={11} height={11} />
+        </button>
+      </div>
+    );
+  }
   return (
     <label className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-3 text-slate focus-within:text-ink">
       <SearchIcon />
@@ -58,9 +81,7 @@ function FilterBar({ matches, total }: { matches: number | null; total: number }
         spellCheck={false}
         className="min-w-0 flex-1 bg-transparent text-[12.5px] text-ink outline-none placeholder:text-faint"
       />
-      <span className="shrink-0 text-[11px] tabular-nums text-faint">
-        {matches === null ? formatCount(total) : `${formatCount(matches)} of ${formatCount(total)}`}
-      </span>
+      {count}
     </label>
   );
 }

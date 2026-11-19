@@ -5,6 +5,8 @@ import { TitleBar } from "./components/layout/TitleBar";
 import { Workspace } from "./components/layout/Workspace";
 import { AssistantSettingsDialog } from "./components/palette/AssistantSettingsDialog";
 import { CommandPalette } from "./components/palette/CommandPalette";
+import { ContextMenu } from "./components/ui/ContextMenu";
+import { PromptDialog } from "./components/ui/PromptDialog";
 import { WelcomeScreen } from "./components/welcome/WelcomeScreen";
 import { ipc } from "./lib/ipc";
 import { useDropTarget } from "./lib/useDropTarget";
@@ -33,6 +35,8 @@ export function App() {
       <StatusBar />
       <CommandPalette />
       <AssistantSettingsDialog />
+      <PromptDialog />
+      <ContextMenu />
       <NoticeToast />
     </div>
   );

@@ -80,3 +80,52 @@ export const SparkIcon = (props: Props) => (
     <path d="M8 2.5v3M8 10.5v3M2.5 8h3M10.5 8h3M4.3 4.3l1.7 1.7M10 10l1.7 1.7M11.7 4.3 10 6M6 10l-1.7 1.7" />
   </Icon>
 );
+
+export const FetchIcon = (props: Props) => (
+  <Icon {...props}>
+    <path d="M13 8a5 5 0 0 1-9.2 2.7M3 8a5 5 0 0 1 9.2-2.7M12.6 2.6v2.9H9.7M3.4 13.4v-2.9h2.9" />
+  </Icon>
+);
+
+export const PullIcon = (props: Props) => (
+  <Icon {...props}>
+    <path d="M8 2.5v8M4.8 7.6 8 10.8l3.2-3.2M3 13.5h10" />
+  </Icon>
+);
+
+export const PushIcon = (props: Props) => (
+  <Icon {...props}>
+    <path d="M8 13.5v-8M4.8 8.4 8 5.2l3.2 3.2M3 2.5h10" />
+  </Icon>
+);
+
+export const PlusIcon = (props: Props) => (
+  <Icon {...props}>
+    <path d="M8 3.5v9M3.5 8h9" />
+  </Icon>
+);
+
+export const MoreIcon = (props: Props) => (
+  <Icon {...props}>
+    <path d="M3.5 8h.01M8 8h.01M12.5 8h.01" strokeWidth="2" />
+  </Icon>
+);
+
+export const CloseIcon = (props: Props) => (
+  <Icon {...props}>
+    <path d="m4 4 8 8M12 4l-8 8" />
+  </Icon>
+);
+
+export const HistoryIcon = (props: Props) => (
+  <Icon {...props}>
+    <circle cx="8" cy="8" r="5.3" />
+    <path d="M8 5v3.2l2 1.3" />
+  </Icon>
+);
+
+export const SpinnerIcon = (props: Props) => (
+  <Icon {...props} className={`animate-spin ${props.className ?? ""}`}>
+    <path d="M8 2.5a5.5 5.5 0 1 0 5.5 5.5" />
+  </Icon>
+);

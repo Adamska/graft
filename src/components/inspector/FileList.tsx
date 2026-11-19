@@ -14,18 +14,19 @@ export interface FileListProps {
   files: FileChange[];
   selectedPath?: string | null;
   onSelect?: (file: FileChange) => void;
+  onMenu?: (event: React.MouseEvent, file: FileChange) => void;
   /** Extra controls rendered at the right edge of each row. */
   trailing?: (file: FileChange) => React.ReactNode;
 }
 
-export function FileList({ files, selectedPath, onSelect, trailing }: FileListProps) {
+export function FileList({ files, selectedPath, onSelect, onMenu, trailing }: FileListProps) {
   return (
     <ul>
       {files.map((file) => {
         const status = STATUS[file.status];
         const selected = file.path === selectedPath;
         return (
-          <li key={file.path} className={`group flex h-7 items-center ${selected ? "bg-active" : "hover:bg-hover"}`}>
+          <li key={file.path} className={`group flex h-7 items-center ${selected ? "bg-active" : "hover:bg-hover"}`} onContextMenu={(event) => onMenu?.(event, file)}>
             <button
               type="button"
               onClick={() => onSelect?.(file)}
