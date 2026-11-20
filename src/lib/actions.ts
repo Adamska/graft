@@ -33,7 +33,10 @@ export async function perform(label: string, action: () => Promise<string | void
     ui.notify("error", errorMessage(error));
   }
   await useRepoStore.getState().reload();
-  await useDiffStore.getState().sync();
+  const repo = useRepoStore.getState();
+  // A command that stopped midway is resolved from the working tree, where its banner lives.
+  if (!succeeded && repo.repo?.operation && repo.selection.kind !== "working") repo.selectWorking();
+  else await useDiffStore.getState().sync();
   ui.setBusy(null);
   return succeeded;
 }

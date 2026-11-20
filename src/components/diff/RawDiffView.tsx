@@ -4,6 +4,7 @@ import { hunkLabel, type RawDiff, type RawLine } from "../../lib/rawDiff";
 import type { DiffTarget } from "../../lib/types";
 import { discardLines, toggleLinesStage } from "../../store/stagingActions";
 import { useDiffStore } from "../../store/useDiffStore";
+import { useRepoStore } from "../../store/useRepoStore";
 import { Segments } from "./Segments";
 import { rowAt } from "./visualRows";
 
@@ -34,7 +35,10 @@ export function RawDiffView({ raw, kind, bottomInset }: Props) {
   const [picked, setPicked] = useState<ReadonlySet<number>>(new Set());
   const activeHunk = useDiffStore((state) => state.activeHunk);
   const setActiveHunk = useDiffStore((state) => state.setActiveHunk);
-  const editable = kind !== "commit";
+  const path = useDiffStore((state) => state.path);
+  const conflicted = useRepoStore((state) => state.status.unstaged.some((file) => file.status === "conflicted" && file.path === path));
+  /* A conflicted file is settled as a whole: by taking a side or by editing it. */
+  const editable = kind !== "commit" && !conflicted;
   const verb = kind === "staged" ? "Unstage" : "Stage";
 
   const offsets = useMemo(() => {
