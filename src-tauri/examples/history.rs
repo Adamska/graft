@@ -1,11 +1,14 @@
-//! Runs the structural diff engine over recent history and reports timing percentiles.
+//! Runs the structural diff engine over recent history and reports timing percentiles,
+//! plus how many changed lines a reviewer reads in a line diff versus in Graft.
 //!
 //! cargo run --release --example history -- /path/to/repository [commits]
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use graft_lib::ast_diff::{analyze, ChangeKind};
+use graft_lib::ast_diff::model::{Row, RowKind};
+use graft_lib::ast_diff::render::{raw_rows, render};
+use graft_lib::ast_diff::{analyze, Analysis, ChangeKind};
 use graft_lib::changeset::{sources, DiffTarget};
 use graft_lib::git::repo;
 
@@ -19,6 +22,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut kinds: BTreeMap<String, usize> = BTreeMap::new();
     let (mut files, mut structural, mut bytes) = (0usize, 0usize, 0usize);
     let mut slowest: Option<(u64, String, usize, usize)> = None;
+    // Changed lines (line diff, Graft) over all commits, and over commits that moved code.
+    let (mut all, mut moving, mut moving_commits) = ((0usize, 0usize), (0usize, 0usize), 0usize);
+    let mut refactors: Vec<(usize, usize, String)> = Vec::new();
 
     let mut next = repository.head_id().ok().map(|id| id.detach());
     while let Some(id) = next.filter(|_| timings.len() < limit) {
@@ -36,6 +42,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         files += analysis.files.len();
         structural += analysis.files.iter().filter(|file| file.is_structural()).count();
         bytes += parsed;
+        let lines = review_lines(&analysis);
+        all = (all.0 + lines.0, all.1 + lines.1);
+        if analysis.changes.iter().any(|change| matches!(change.kind, ChangeKind::Moved | ChangeKind::MovedEdited)) {
+            moving = (moving.0 + lines.0, moving.1 + lines.1);
+            moving_commits += 1;
+            let summary = commit.message()?.summary().to_string();
+            refactors.push((lines.0, lines.1, format!("{} {summary}", &id.to_string()[..7])));
+        }
         for change in analysis.changes.iter().filter(|change| change.kind != ChangeKind::Origin) {
             *kinds.entry(format!("{:?}", change.kind)).or_default() += 1;
         }
@@ -57,5 +71,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (kind, count) in kinds {
         println!("{kind:<18} {count}");
     }
+    let ratio = |(line, graft): (usize, usize)| {
+        format!("{line} -> {graft} ({:.0}% fewer)", 100.0 - graft as f64 * 100.0 / line.max(1) as f64)
+    };
+    println!("changed lines      {}", ratio(all));
+    println!("in {moving_commits:>4} moving     {}", ratio(moving));
+    refactors.sort_by_key(|(line, graft, _)| std::cmp::Reverse(line.saturating_sub(*graft)));
+    for (line, graft, title) in refactors.iter().take(8) {
+        println!("  {line:>6} -> {graft:>5}  {title}");
+    }
     Ok(())
+}
+
+/// Changed lines in the raw line diff, and in Graft's structural view where a pure move
+/// is collapsed to its header and only edited tokens' lines count.
+fn review_lines(analysis: &Analysis) -> (usize, usize) {
+    let changed = |rows: &[Row]| -> usize {
+        rows.iter()
+            .map(|row| match row.kind {
+                RowKind::Change => 2,
+                RowKind::Add | RowKind::Del => 1,
+                RowKind::Context | RowKind::Fold => 0,
+            })
+            .sum()
+    };
+    let (mut line, mut graft) = (0, 0);
+    for (index, pair) in analysis.files.iter().enumerate() {
+        if pair.binary {
+            continue;
+        }
+        line += changed(&raw_rows(pair));
+        graft += render(analysis, index)
+            .blocks
+            .iter()
+            .filter(|block| block.kind != ChangeKind::Moved)
+            .map(|block| changed(&block.rows))
+            .sum::<usize>();
+    }
+    (line, graft)
 }
