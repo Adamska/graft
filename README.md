@@ -9,9 +9,7 @@
   Rust, Tauri 2, tree-sitter, and React. Developed and tested on macOS.
 </p>
 
-<p align="center">
-  <img src="docs/structural-diff.png" alt="The working tree: a one-token body edit, a method that moved and lost an error path, and a new method, each with its own Stage button" width="100%">
-</p>
+https://github.com/user-attachments/assets/3751d90d-78b0-45a3-a339-f58948816f85
 
 ## In 30 seconds
 
