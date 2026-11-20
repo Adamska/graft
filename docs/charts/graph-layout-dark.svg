@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="230" viewBox="0 0 760 230" font-family='system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif' role="img" aria-label="Full commit graph layout, whole history">
+<rect width="760" height="230" rx="10" fill="#1a1a19"/>
+<text x="24" y="34" font-size="16" font-weight="600" fill="#f0efec">Full commit graph layout, whole history</text>
+<text x="24" y="56" font-size="12.5" fill="#c3c2b7">Median of 7 alternating runs on an M1 Max, both with a commit-graph file. Lower is faster.</text>
+<rect x="24" y="68" width="10" height="10" rx="2" fill="#d95926"/>
+<text x="40" y="77.5" font-size="12" fill="#c3c2b7">git log --graph --all</text>
+<rect x="186.6" y="68" width="10" height="10" rx="2" fill="#3987e5"/>
+<text x="202.6" y="77.5" font-size="12" fill="#c3c2b7">Graft</text>
+<line x1="250.0" y1="86" x2="250.0" y2="200" stroke="#2c2c2a" stroke-width="1"/>
+<text x="250.0" y="216" font-size="11" text-anchor="middle" fill="#898781">0 ms</text>
+<line x1="338.0" y1="86" x2="338.0" y2="200" stroke="#2c2c2a" stroke-width="1"/>
+<text x="338.0" y="216" font-size="11" text-anchor="middle" fill="#898781">250 ms</text>
+<line x1="426.0" y1="86" x2="426.0" y2="200" stroke="#2c2c2a" stroke-width="1"/>
+<text x="426.0" y="216" font-size="11" text-anchor="middle" fill="#898781">500 ms</text>
+<line x1="514.0" y1="86" x2="514.0" y2="200" stroke="#2c2c2a" stroke-width="1"/>
+<text x="514.0" y="216" font-size="11" text-anchor="middle" fill="#898781">750 ms</text>
+<line x1="602.0" y1="86" x2="602.0" y2="200" stroke="#2c2c2a" stroke-width="1"/>
+<text x="602.0" y="216" font-size="11" text-anchor="middle" fill="#898781">1000 ms</text>
+<line x1="690.0" y1="86" x2="690.0" y2="200" stroke="#2c2c2a" stroke-width="1"/>
+<text x="690.0" y="216" font-size="11" text-anchor="middle" fill="#898781">1250 ms</text>
+<line x1="250" y1="86" x2="250" y2="200" stroke="#383835"/>
+<text x="238" y="103.5" font-size="12.5" font-weight="500" text-anchor="end" fill="#f0efec">git/git</text>
+<text x="238" y="118.5" font-size="12.5" text-anchor="end" fill="#898781">86,340 commits  ·  8.6x faster</text>
+<path d="M250 92 H643.4079999999999 Q647.4079999999999 92 647.4079999999999 96 V102 Q647.4079999999999 106 643.4079999999999 106 H250 Z" fill="#d95926"/>
+<text x="653.4079999999999" y="103" font-size="11.5" fill="#c3c2b7">1,129 ms</text>
+<path d="M250 108 H292.464 Q296.464 108 296.464 112 V118 Q296.464 122 292.464 122 H250 Z" fill="#3987e5"/>
+<text x="302.464" y="119" font-size="11.5" fill="#c3c2b7">132 ms</text>
+<text x="238" y="155.5" font-size="12.5" font-weight="500" text-anchor="end" fill="#f0efec">Synthetic repository</text>
+<text x="238" y="170.5" font-size="12.5" text-anchor="end" fill="#898781">150,000 commits  ·  5.9x faster</text>
+<path d="M250 144 H631.088 Q635.088 144 635.088 148 V154 Q635.088 158 631.088 158 H250 Z" fill="#d95926"/>
+<text x="641.088" y="155" font-size="11.5" fill="#c3c2b7">1,094 ms</text>
+<path d="M250 160 H311.12 Q315.12 160 315.12 164 V170 Q315.12 174 311.12 174 H250 Z" fill="#3987e5"/>
+<text x="321.12" y="171" font-size="11.5" fill="#c3c2b7">185 ms</text>
+</svg>
